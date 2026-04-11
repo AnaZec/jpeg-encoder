@@ -2,8 +2,10 @@
 #include "color_converter.hpp"
 #include "padding.hpp"
 #include "block_splitter.hpp"
+#include "dct.hpp"
 
 #include <iostream>
+#include <iomanip>
 
 int main() {
     try {
@@ -11,24 +13,18 @@ int main() {
         YCbCrImage ycbcr = ColorConverter::rgbToYCbCr(image.data, image.width, image.height);
         YCbCrImage padded = Padding::padToMultipleOf8(ycbcr);
         ImageBlocks blocks = BlockSplitter::splitImageIntoBlocks(padded);
+        DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
 
-        std::cout << "Original size: " << ycbcr.width << " x " << ycbcr.height << "\n";
-        std::cout << "Padded size:   " << padded.width << " x " << padded.height << "\n";
+        std::cout << "Padded size: " << padded.width << " x " << padded.height << "\n";
+        std::cout << "Total Y blocks: " << dctBlocks.yBlocks.blocks.size() << "\n";
 
-        std::cout << "Width multiple of 8: " << (padded.width % 8 == 0 ? "yes" : "no") << "\n";
-        std::cout << "Height multiple of 8: " << (padded.height % 8 == 0 ? "yes" : "no") << "\n";
+        if (!dctBlocks.yBlocks.blocks.empty()) {
+            std::cout << "First Y DCT block:\n";
+            const auto& block = dctBlocks.yBlocks.blocks[0];
 
-        std::cout << "Original first Y pixel: " << static_cast<int>(ycbcr.y[0]) << "\n";
-        std::cout << "Padded first Y pixel:   " << static_cast<int>(padded.y[0]) << "\n";
-
-        std::cout << "Y blocks per row: " << blocks.yBlocks.blocksPerRow << "\n";
-        std::cout << "Y blocks per col: " << blocks.yBlocks.blocksPerCol << "\n";
-        std::cout << "Total Y blocks:   " << blocks.yBlocks.blocks.size() << "\n";
-
-        if (!blocks.yBlocks.blocks.empty()) {
-            std::cout << "First Y block values:\n";
             for (int i = 0; i < 64; ++i) {
-                std::cout << static_cast<int>(blocks.yBlocks.blocks[0][i]) << " ";
+                std::cout << std::setw(10) << std::fixed << std::setprecision(2)
+                          << block[i] << " ";
                 if ((i + 1) % 8 == 0) {
                     std::cout << "\n";
                 }
@@ -37,6 +33,20 @@ int main() {
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;
+    }
+
+    // Quick check DCT
+    Block8x8 constantBlock{};
+    constantBlock.fill(128);
+
+    DctBlock8x8 dct = DCT::forwardDCT(constantBlock);
+
+    std::cout << "DCT of constant 128 block:\n";
+    for (int i = 0; i < 64; ++i) {
+        std::cout << dct[i] << " ";
+        if ((i + 1) % 8 == 0) {
+            std::cout << "\n";
+        }
     }
 
     return 0;
