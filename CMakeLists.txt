@@ -10,6 +10,7 @@ add_executable(jpeg_encoder
     src/color_converter.cpp
     src/padding.cpp
     src/block_splitter.cpp
+    src/dct.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
