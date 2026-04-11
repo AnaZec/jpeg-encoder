@@ -4,6 +4,7 @@
 #include "block_splitter.hpp"
 #include "dct.hpp"
 #include "quantizer.hpp"
+#include "zigzag.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -15,19 +16,21 @@ int main() {
         YCbCrImage padded = Padding::padToMultipleOf8(ycbcr);
         ImageBlocks blocks = BlockSplitter::splitImageIntoBlocks(padded);
         DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
+        QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, 50);
+        ZigZagImageBlocks zigzagged = ZigZag::reorderImage(quantized);
 
-        const int qualityFactor = 50;
-        QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, qualityFactor);
-
-        std::cout << "Quality factor: " << qualityFactor << "\n";
-        std::cout << "Total Y blocks: " << quantized.yBlocks.blocks.size() << "\n";
-
-        if (!quantized.yBlocks.blocks.empty()) {
-            std::cout << "First quantized Y block:\n";
-            const auto& block = quantized.yBlocks.blocks[0];
-
+        if (!quantized.yBlocks.blocks.empty() && !zigzagged.yBlocks.blocks.empty()) {
+            std::cout << "First quantized Y block (row-major):\n";
             for (int i = 0; i < 64; ++i) {
-                std::cout << std::setw(5) << block[i] << " ";
+                std::cout << std::setw(4) << quantized.yBlocks.blocks[0][i] << " ";
+                if ((i + 1) % 8 == 0) {
+                    std::cout << "\n";
+                }
+            }
+
+            std::cout << "\nFirst zigzagged Y block:\n";
+            for (int i = 0; i < 64; ++i) {
+                std::cout << std::setw(4) << zigzagged.yBlocks.blocks[0][i] << " ";
                 if ((i + 1) % 8 == 0) {
                     std::cout << "\n";
                 }
