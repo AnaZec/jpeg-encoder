@@ -16,6 +16,7 @@ add_executable(jpeg_encoder
     src/dc_encoder.cpp
     src/ac_encoder.cpp
     src/jpeg_writer.cpp
+    src/dct_test.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
