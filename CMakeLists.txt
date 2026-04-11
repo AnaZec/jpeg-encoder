@@ -12,6 +12,7 @@ add_executable(jpeg_encoder
     src/block_splitter.cpp
     src/dct.cpp
     src/quantizer.cpp
+    src/zigzag.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
