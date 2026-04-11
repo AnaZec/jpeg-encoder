@@ -6,6 +6,7 @@
 #include "quantizer.hpp"
 #include "zigzag.hpp"
 #include "dc_encoder.hpp"
+#include "ac_encoder.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -25,21 +26,32 @@ int main() {
         DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
         QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, 50);
         ZigZagImageBlocks zigzagged = ZigZag::reorderImage(quantized);
-        DcDifferenceImage dcDiffs = DCEncoder::computeImageDifferences(zigzagged);
+        AcEncodedImage acEncoded = ACEncoder::encodeImage(zigzagged);
 
-        std::cout << "First 10 Y DC differences:\n";
-        for (std::size_t i = 0; i < 10 && i < dcDiffs.y.differences.size(); ++i) {
-            const int diff = dcDiffs.y.differences[i];
-            const int category = DCEncoder::magnitudeCategory(diff);
-            const auto bits = DCEncoder::amplitudeBits(diff);
+        if (!acEncoded.y.blocks.empty()) {
+            std::cout << "First Y AC encoded block:\n";
 
-            std::cout << "Block " << i
-                      << " | diff = " << diff
-                      << " | category = " << category
-                      << " | bits = ";
-            printBits(bits);
-            std::cout << "\n";
+            const auto& block = acEncoded.y.blocks[0];
+            for (std::size_t i = 0; i < block.symbols.size(); ++i) {
+                const auto& s = block.symbols[i];
+
+                std::cout << "Symbol " << i << " | ";
+
+                if (s.isEob) {
+                    std::cout << "EOB\n";
+                } else if (s.isZrl) {
+                    std::cout << "ZRL\n";
+                } else {
+                    std::cout << "run = " << s.runLength
+                              << " | value = " << s.value
+                              << " | size = " << s.size
+                              << " | bits = ";
+                    printBits(ACEncoder::amplitudeBits(s.value));
+                    std::cout << "\n";
+                }
+            }
         }
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;

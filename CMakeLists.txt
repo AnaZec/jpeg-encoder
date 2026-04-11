@@ -14,6 +14,7 @@ add_executable(jpeg_encoder
     src/quantizer.cpp
     src/zigzag.cpp
     src/dc_encoder.cpp
+    src/ac_encoder.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
