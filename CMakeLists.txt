@@ -8,6 +8,7 @@ add_executable(jpeg_encoder
     src/main.cpp
     src/bmp_reader.cpp
     src/color_converter.cpp
+    src/padding.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
