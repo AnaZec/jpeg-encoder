@@ -11,6 +11,7 @@ add_executable(jpeg_encoder
     src/padding.cpp
     src/block_splitter.cpp
     src/dct.cpp
+    src/quantizer.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
