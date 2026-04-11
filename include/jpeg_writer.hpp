@@ -7,11 +7,11 @@
 
 class JpegWriter {
 public:
-    static void writeJpegSkeleton(const std::string& outputPath,
-                                  int width,
-                                  int height,
-                                  const std::array<int, 64>& luminanceTable,
-                                  const std::array<int, 64>& chrominanceTable);
+    static void writeJpegFile(const std::string& outputPath,
+                              int width,
+                              int height,
+                              const std::array<int, 64>& luminanceTable,
+                              const std::array<int, 64>& chrominanceTable);
 
 private:
     static void writeMarker(std::vector<uint8_t>& out, uint16_t marker);
@@ -26,4 +26,4 @@ private:
     static void writeDHTPlaceholder(std::vector<uint8_t>& out);
     static void writeSOS(std::vector<uint8_t>& out);
     static void writeEOI(std::vector<uint8_t>& out);
-}; 
+};
