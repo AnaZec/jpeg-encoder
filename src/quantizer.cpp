@@ -30,6 +30,10 @@ const std::array<int, 64> kChrominanceTable = {
     99, 99, 99, 99, 99, 99, 99, 99
 };
 
+// Standard JPEG quality scaling formula.
+// qualityFactor must be in range [1, 100]
+// Lower quality => larger quantization values => more compression.
+// Higher quality => smaller quantization values => less compression.
 std::array<int, 64> scaleTable(const std::array<int, 64>& baseTable, int qualityFactor) {
     if (qualityFactor < 1 || qualityFactor > 100) {
         throw std::runtime_error("Quality factor must be in range [1, 100]");
