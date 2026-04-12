@@ -6,6 +6,7 @@
 
 namespace {
 
+// Standard JPEG luminance quantization table used for Y channel
 const std::array<int, 64> kLuminanceTable = {
     16, 11, 10, 16, 24, 40, 51, 61,
     12, 12, 14, 19, 26, 58, 60, 55,
