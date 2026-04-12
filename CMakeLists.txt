@@ -18,6 +18,7 @@ add_executable(jpeg_encoder
     src/jpeg_writer.cpp
     src/dct_test.cpp
     src/zigzag_test.cpp
+    src/huffman_tables.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)
