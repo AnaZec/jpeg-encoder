@@ -18,6 +18,7 @@ const std::array<int, 64> kLuminanceTable = {
     72, 92, 95, 98,112,100,103, 99
 };
 
+// Standard JPEG chrominance quantization table used for Cb and Cr channels
 const std::array<int, 64> kChrominanceTable = {
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
