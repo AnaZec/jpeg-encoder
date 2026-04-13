@@ -14,8 +14,11 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <fstream>
+#include <filesystem>
+#include <sstream>
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
         int quality = 75; // default
 
@@ -36,6 +39,27 @@ int main() {
         }
 
         const std::string inputPath = "../images/input/test.bmp";
+        const std::string outputPath = "../images/output/output_q" + std::to_string(quality) + ".jpg";
+
+        // For report generation
+        const std::string reportDir = "../reports";
+        std::filesystem::create_directories(reportDir);
+
+        const std::string reportPath =
+        reportDir + "/report_q" + std::to_string(quality) + ".txt";
+
+        std::ofstream reportFile(reportPath);
+        if (!reportFile) {
+        throw std::runtime_error("Failed to open report file: " + reportPath);
+        }
+
+        auto log = [&](const std::string& message) {
+        std::cout << message;
+        reportFile << message;
+        };
+
+        // Full duration measurement start
+        auto start_cycle = std::chrono::high_resolution_clock::now();
 
 
         // 1. Load BMP
@@ -137,6 +161,10 @@ int main() {
         std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
         std::cout << "**************************************************" << std::endl;
 
+        auto end_cycle = std::chrono::high_resolution_clock::now();
+        auto duration_in_ms_total = std::chrono::duration_cast<std::chrono::milliseconds>(end_cycle - start_cycle);
+
+
         std::cout << "JPEG written successfully\n";
         std::cout << "Input:   " << inputPath << "\n";
         std::cout << "Output:  " << outputPath << "\n";
@@ -169,7 +197,10 @@ int main() {
         std::cout << "\nPSNR:\n";
         std::cout << "  B: " << psnr.psnrB << " dB\n";
         std::cout << "  G: " << psnr.psnrG << " dB\n";
-        std::cout << "  R: " << psnr.psnrR << " dB\n";
+        std::cout << "  R: " << psnr.psnrR << " dB\n\n";
+        std::cout << "**************************************************" << std::endl;
+
+        std::cout << "Total runtime : " << duration_in_ms_total.count()/1000 << " s\n\n" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
