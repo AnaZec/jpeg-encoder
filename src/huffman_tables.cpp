@@ -1,24 +1,22 @@
 #include "huffman_tables.hpp"
 
+#include <cstddef>
+#include <stdexcept>
+
 namespace {
 
 const JpegHuffmanTable kLuminanceDCTable = {
-    // Number of codes of length 1..16
     { 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 },
-
-    // Symbols
     { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 };
 
 const JpegHuffmanTable kChrominanceDCTable = {
     { 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
-
     { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 };
 
 const JpegHuffmanTable kLuminanceACTable = {
     { 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d },
-
     {
         0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12,
         0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07,
@@ -46,7 +44,6 @@ const JpegHuffmanTable kLuminanceACTable = {
 
 const JpegHuffmanTable kChrominanceACTable = {
     { 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77 },
-
     {
         0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21,
         0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
@@ -88,4 +85,57 @@ const JpegHuffmanTable& HuffmanTables::chrominanceDCTable() {
 
 const JpegHuffmanTable& HuffmanTables::chrominanceACTable() {
     return kChrominanceACTable;
+}
+
+HuffmanCodeMap HuffmanTables::buildCanonicalCodes(const JpegHuffmanTable& table) {
+    std::size_t countedSymbols = 0;
+    for (uint8_t count : table.codeLengthCounts) {
+        countedSymbols += count;
+    }
+
+    if (countedSymbols != table.symbols.size()) {
+        throw std::runtime_error("Huffman table symbol count does not match code length counts");
+    }
+
+    HuffmanCodeMap codeMap;
+    codeMap.reserve(table.symbols.size());
+
+    uint16_t code = 0;
+    std::size_t symbolIndex = 0;
+
+    for (std::size_t i = 0; i < 16; ++i) {
+        const uint8_t codeLength = static_cast<uint8_t>(i + 1);
+        const uint8_t count = table.codeLengthCounts[i];
+
+        for (uint8_t j = 0; j < count; ++j) {
+            const uint8_t symbol = table.symbols[symbolIndex++];
+
+            codeMap[symbol] = HuffmanCode{
+                code,
+                codeLength
+            };
+
+            ++code;
+        }
+
+        code <<= 1;
+    }
+
+    return codeMap;
+}
+
+HuffmanCodeMap HuffmanTables::luminanceDCCodes() {
+    return buildCanonicalCodes(luminanceDCTable());
+}
+
+HuffmanCodeMap HuffmanTables::luminanceACCodes() {
+    return buildCanonicalCodes(luminanceACTable());
+}
+
+HuffmanCodeMap HuffmanTables::chrominanceDCCodes() {
+    return buildCanonicalCodes(chrominanceDCTable());
+}
+
+HuffmanCodeMap HuffmanTables::chrominanceACCodes() {
+    return buildCanonicalCodes(chrominanceACTable());
 }
