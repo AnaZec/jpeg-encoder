@@ -24,10 +24,11 @@ public:
     static const JpegHuffmanTable& chrominanceDCTable();
     static const JpegHuffmanTable& chrominanceACTable();
 
-    static HuffmanCodeMap buildCanonicalCodes(const JpegHuffmanTable& table);
-
     static HuffmanCodeMap luminanceDCCodes();
     static HuffmanCodeMap luminanceACCodes();
     static HuffmanCodeMap chrominanceDCCodes();
     static HuffmanCodeMap chrominanceACCodes();
+
+private:
+    static HuffmanCodeMap buildCanonicalCodes(const JpegHuffmanTable& table);
 };
