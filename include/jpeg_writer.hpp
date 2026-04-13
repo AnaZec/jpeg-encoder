@@ -1,18 +1,23 @@
 #pragma once
 
+#include "bitstream_writer.hpp"
+#include "entropy_encoder.hpp"
+#include "huffman_tables.hpp"
+
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <cstddef> // basic C++ standard types e.g. size_t
 
 class JpegWriter {
 public:
     static std::size_t writeJpegFile(const std::string& outputPath,
-                                 int width,
-                                 int height,
-                                 const std::array<int, 64>& luminanceTable,
-                                 const std::array<int, 64>& chrominanceTable);
+                                     int width,
+                                     int height,
+                                     const std::array<int, 64>& luminanceTable,
+                                     const std::array<int, 64>& chrominanceTable,
+                                     const EntropyImageData& entropyData);
 
 private:
     static void writeMarker(std::vector<uint8_t>& out, uint16_t marker);
@@ -24,7 +29,19 @@ private:
                          const std::array<int, 64>& luminanceTable,
                          const std::array<int, 64>& chrominanceTable);
     static void writeSOF0(std::vector<uint8_t>& out, int width, int height);
-    static void writeDHTPlaceholder(std::vector<uint8_t>& out);
+    static void writeDHT(std::vector<uint8_t>& out);
     static void writeSOS(std::vector<uint8_t>& out);
     static void writeEOI(std::vector<uint8_t>& out);
+
+    static void writeSingleHuffmanTable(std::vector<uint8_t>& out,
+                                        uint8_t tableClass,
+                                        uint8_t tableId,
+                                        const JpegHuffmanTable& table);
+
+    static std::vector<uint8_t> encodeScanData(const EntropyImageData& entropyData);
+
+    static void encodeBlockToBitstream(BitstreamWriter& writer,
+                                       const EntropyEncodedBlock& block,
+                                       const HuffmanCodeMap& dcCodes,
+                                       const HuffmanCodeMap& acCodes);
 };
