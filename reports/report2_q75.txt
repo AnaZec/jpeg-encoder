@@ -1,0 +1,56 @@
+**************************************************
+Processing image: test2.bmp
+Image number: 2
+Quality: 75
+**************************************************
+Loading BMP...
+Phase duration: 115 ms
+**************************************************
+Converting RGB to YCbCr...
+Phase duration: 539 ms
+**************************************************
+Padding image to dimensions multiple of 8...
+Phase duration: 183 ms
+**************************************************
+Splitting into 8x8 blocks...
+Phase duration: 155 ms
+**************************************************
+Applying DCT...
+Phase duration: 65769 ms
+**************************************************
+Quantizing...
+Phase duration: 347 ms
+**************************************************
+Zigzag reorder...
+Phase duration: 222 ms
+**************************************************
+Entropy encoding...
+Phase duration: 3903 ms
+**************************************************
+Getting quantization tables...
+Phase duration: 0 ms
+**************************************************
+Writing JPEG...
+Phase duration: 1310 ms
+**************************************************
+JPEG written successfully
+Input:   ../images/input/test2.bmp
+Output:  ../images/output/output2_q75.jpg
+Report:  ../reports/report2_q75.txt
+Size:    4066014 bytes
+**************************************************
+
+MSE:
+  B: 1.60768
+  G: 1.09138
+  R: 1.32394
+
+PSNR:
+  B: 46.0688 dB
+  G: 47.7511 dB
+  R: 46.9121 dB
+**************************************************
+Total runtime: 72.546 s
+
+DONE
+
