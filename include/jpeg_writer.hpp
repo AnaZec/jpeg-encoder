@@ -4,14 +4,15 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <cstddef> // basic C++ standard types e.g. size_t
 
 class JpegWriter {
 public:
-    static void writeJpegFile(const std::string& outputPath,
-                              int width,
-                              int height,
-                              const std::array<int, 64>& luminanceTable,
-                              const std::array<int, 64>& chrominanceTable);
+    static std::size_t writeJpegFile(const std::string& outputPath,
+                                 int width,
+                                 int height,
+                                 const std::array<int, 64>& luminanceTable,
+                                 const std::array<int, 64>& chrominanceTable);
 
 private:
     static void writeMarker(std::vector<uint8_t>& out, uint16_t marker);

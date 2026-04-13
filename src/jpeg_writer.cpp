@@ -133,11 +133,11 @@ void JpegWriter::writeEOI(std::vector<uint8_t>& out) {
     writeMarker(out, 0xFFD9);
 }
 
-void JpegWriter::writeJpegFile(const std::string& outputPath,
-                               int width,
-                               int height,
-                               const std::array<int, 64>& luminanceTable,
-                               const std::array<int, 64>& chrominanceTable) {
+std::size_t JpegWriter::writeJpegFile(const std::string& outputPath,
+                                      int width,
+                                      int height,
+                                      const std::array<int, 64>& luminanceTable,
+                                      const std::array<int, 64>& chrominanceTable) {
     std::vector<uint8_t> bytes;
     bytes.reserve(512);
 
@@ -169,4 +169,6 @@ void JpegWriter::writeJpegFile(const std::string& outputPath,
     if (!file) {
         throw std::runtime_error("Failed to write JPEG file: " + outputPath);
     }
+
+    return bytes.size();
 }
