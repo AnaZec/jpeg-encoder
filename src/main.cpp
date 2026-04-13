@@ -13,42 +13,117 @@
 
 #include <iostream>
 #include <string>
+#include <chrono>
 
 int main() {
     try {
+        int quality = 75; // default
+
+        // Parse CLI args
+        for (int i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+
+            if (arg == "--quality") {
+                if (i + 1 >= argc) {
+                    throw std::runtime_error("Missing value for --quality");
+                }
+                quality = std::stoi(argv[++i]);
+            }
+        }
+
+        if (quality < 1 || quality > 100) {
+            throw std::runtime_error("Quality must be in range [1, 100]");
+        }
+
         const std::string inputPath = "../images/input/test.bmp";
-        const std::string outputPath = "../images/output/output.jpg";
-        const int quality = 75;
+
 
         // 1. Load BMP
+        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << "Loading BMP..." << std::endl;
         BmpImage bmp = BmpReader::load(inputPath);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
+
 
         // 2. Convert RGB -> YCbCr
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Converting RGB to YCbCr..." << std::endl;
         YCbCrImage ycbcr = ColorConverter::rgbToYCbCr(bmp.data, bmp.width, bmp.height);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 3. Pad image so dimensions are multiples of 8
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Padding image to dimensions multiples of 8..." <<std::endl;
         YCbCrImage padded = Padding::padToMultipleOf8(ycbcr);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 4. Split into 8x8 blocks
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Splitting into 8x8 blocks..." << std::endl;
         ImageBlocks blocks = BlockSplitter::splitImageIntoBlocks(padded);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 5. Apply DCT
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Applying DCT..." << std::endl;
         DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 6. Quantize
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Quantizing..." << std::endl;
         QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, quality);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 7. Zigzag reorder
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Zigzag reorder..." << std::endl;
         ZigZagImageBlocks zigzag = ZigZag::reorderImage(quantized);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 8. Entropy encode
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Entropy encoding ..." << std::endl;
         EntropyImageData entropy = EntropyEncoder::encodeImage(zigzag);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 9. Get quantization tables used for this quality factor
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Get quantization tables..." <<std::endl;
         const auto lumaTable = Quantizer::scaledLuminanceTable(quality);
         const auto chromaTable = Quantizer::scaledChrominanceTable(quality);
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         // 10. Write JPEG
+        start = std::chrono::high_resolution_clock::now();
+        std::cout << "Write JPEG..." << std::endl;
         std::size_t bytesWritten = JpegWriter::writeJpegFile(
             outputPath,
             bmp.width,
@@ -57,6 +132,10 @@ int main() {
             chromaTable,
             entropy
         );
+        end = std::chrono::high_resolution_clock::now();
+        duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Phase duration:" << duration_in_ms.count() << " ms" << std::endl;
+        std::cout << "**************************************************" << std::endl;
 
         std::cout << "JPEG written successfully\n";
         std::cout << "Input:   " << inputPath << "\n";
