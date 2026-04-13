@@ -1,37 +1,49 @@
 #include "bmp_reader.hpp"
-#include "color_converter.hpp"
-#include "padding.hpp"
-#include "block_splitter.hpp"
-#include "dct.hpp"
 #include "quantizer.hpp"
-#include "zigzag.hpp"
-#include "debug_dump.hpp"
+#include "jpeg_writer.hpp"
 
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
     try {
-        bool debugMode = false;
+        int qualityFactor = 50;
 
-        for (int i = 1; i < argc; ++i) {
-            if (std::string(argv[i]) == "--debug") {
-                debugMode = true;
-            }
+        if (argc >= 2) {
+            qualityFactor = std::stoi(argv[1]);
         }
 
-        BmpImage image = BmpReader::load("../images/input/test.bmp");
-        YCbCrImage ycbcr = ColorConverter::rgbToYCbCr(image.data, image.width, image.height);
-        YCbCrImage padded = Padding::padToMultipleOf8(ycbcr);
-        ImageBlocks blocks = BlockSplitter::splitImageIntoBlocks(padded);
-        DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
-        QuantizedImageBlocks quantizedBlocks = Quantizer::quantizeImage(dctBlocks, 50);
-        ZigZagImageBlocks zigzagBlocks = ZigZag::reorderImage(quantizedBlocks);
+        const std::string inputPath = "../images/input/test.bmp";
+        const std::string outputPath = "../images/output/test.jpg";
 
-        DebugDump::dumpFirstBlock(dctBlocks, quantizedBlocks, zigzagBlocks, debugMode);
+        BmpImage image = BmpReader::load(inputPath);
 
-        std::cout << "Pipeline completed successfully.\n";
-        std::cout << "Debug mode: " << (debugMode ? "ON" : "OFF") << "\n";
+        const auto lumTable = Quantizer::scaledLuminanceTable(qualityFactor);
+        const auto chromaTable = Quantizer::scaledChrominanceTable(qualityFactor);
+
+        const std::size_t outputBytes = JpegWriter::writeJpegFile(outputPath,
+                                                                  image.width,
+                                                                  image.height,
+                                                                  lumTable,
+                                                                  chromaTable);
+
+        const std::uintmax_t inputBytes = std::filesystem::file_size(inputPath);
+
+        if (outputBytes == 0) {
+            throw std::runtime_error("Output JPEG file size is zero");
+        }
+
+        const double compressionRatio =
+            static_cast<double>(inputBytes) / static_cast<double>(outputBytes);
+
+        std::cout << "JPEG file written successfully: " << outputPath << "\n";
+        std::cout << "Quality factor: " << qualityFactor << "\n";
+        std::cout << "Input size: " << inputBytes << " bytes\n";
+        std::cout << "Output size: " << outputBytes << " bytes\n";
+        std::cout << std::fixed << std::setprecision(2);
+        std::cout << "Compression ratio: " << compressionRatio << ":1\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
