@@ -21,6 +21,7 @@ add_executable(jpeg_encoder
     src/huffman_tables.cpp
     src/entropy_encoder.cpp
     src/debug_dump.cpp
+    src/bitstream_writer.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE include)

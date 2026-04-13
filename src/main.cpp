@@ -1,4 +1,5 @@
 #include "huffman_tables.hpp"
+#include "bitstream_writer.hpp"
 
 #include <iostream>
 #include <string>
@@ -47,6 +48,35 @@ bool validateTable(const std::string& name,
     return passed;
 }
 
+bool validateBitstreamWriter() {
+    bool passed = true;
+
+    BitstreamWriter writer;
+
+    writer.writeBits(0b101, 3);
+    writer.writeBits(std::vector<bool>{false, true, true});
+    writer.writeBits(0b01, 2);
+
+    const std::vector<uint8_t> expectedFirstPass{0b10101101};
+    passed &= check(writer.buffer() == expectedFirstPass,
+                    "BitstreamWriter packs variable-length codes deterministically");
+
+    writer.writeBits(0b11111111, 8);
+    const std::vector<uint8_t> expectedStuffed{0b10101101, 0xFF, 0x00};
+    passed &= check(writer.buffer() == expectedStuffed,
+                    "BitstreamWriter performs JPEG byte stuffing after 0xFF");
+
+    writer.reset();
+    writer.writeBits(0b10101, 5);
+    writer.flushWithOnes();
+
+    const std::vector<uint8_t> expectedFlushed{0b10101111};
+    passed &= check(writer.buffer() == expectedFlushed,
+                    "BitstreamWriter flushes incomplete bytes with trailing ones");
+
+    return passed;
+}
+
 } // namespace
 
 int main() {
@@ -63,12 +93,13 @@ int main() {
 
         bool passed = true;
 
+        passed &= validateBitstreamWriter();
+
         passed &= validateTable("Luminance DC", lumaDCTable, lumaDCCodes, 12);
         passed &= validateTable("Luminance AC", lumaACTable, lumaACCodes, 162);
         passed &= validateTable("Chrominance DC", chromaDCTable, chromaDCCodes, 12);
         passed &= validateTable("Chrominance AC", chromaACTable, chromaACCodes, 162);
 
-        // Specific lookup checks proving the maps are usable for DC categories and AC symbols
         passed &= check(lumaDCCodes.find(0) != lumaDCCodes.end(),
                         "Luminance DC lookup contains category 0");
         passed &= check(lumaDCCodes.find(11) != lumaDCCodes.end(),
