@@ -107,6 +107,24 @@ HuffmanCodeMap HuffmanTables::luminanceACCodes() {
     return HuffmanTables::buildCanonicalCodes(kLuminanceACTable);
 }
 
+JpegHuffmanTableSet HuffmanTables::standardTableSet() {
+    return JpegHuffmanTableSet{
+        kLuminanceDCTable,
+        kLuminanceACTable,
+        kChrominanceDCTable,
+        kChrominanceACTable
+    };
+}
+
+JpegHuffmanCodeSet HuffmanTables::buildCodeSet(const JpegHuffmanTableSet& tables) {
+    return JpegHuffmanCodeSet{
+        buildCanonicalCodes(tables.luminanceDC),
+        buildCanonicalCodes(tables.luminanceAC),
+        buildCanonicalCodes(tables.chrominanceDC),
+        buildCanonicalCodes(tables.chrominanceAC)
+    };
+}
+
 HuffmanCodeMap HuffmanTables::chrominanceDCCodes() {
     return HuffmanTables::buildCanonicalCodes(kChrominanceDCTable);
 }

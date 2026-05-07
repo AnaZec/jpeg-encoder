@@ -17,6 +17,20 @@ struct HuffmanCode {
 
 using HuffmanCodeMap = std::unordered_map<uint8_t, HuffmanCode>;
 
+struct JpegHuffmanTableSet {
+    JpegHuffmanTable luminanceDC;
+    JpegHuffmanTable luminanceAC;
+    JpegHuffmanTable chrominanceDC;
+    JpegHuffmanTable chrominanceAC;
+};
+
+struct JpegHuffmanCodeSet {
+    HuffmanCodeMap luminanceDC;
+    HuffmanCodeMap luminanceAC;
+    HuffmanCodeMap chrominanceDC;
+    HuffmanCodeMap chrominanceAC;
+};
+
 class HuffmanTables {
 public:
     static const JpegHuffmanTable& luminanceDCTable();
@@ -29,6 +43,8 @@ public:
     static HuffmanCodeMap chrominanceDCCodes();
     static HuffmanCodeMap chrominanceACCodes();
 
-private:
+    static JpegHuffmanTableSet standardTableSet();
+    static JpegHuffmanCodeSet buildCodeSet(const JpegHuffmanTableSet& tables);
+
     static HuffmanCodeMap buildCanonicalCodes(const JpegHuffmanTable& table);
 };

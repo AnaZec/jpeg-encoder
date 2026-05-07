@@ -18,6 +18,7 @@ add_executable(jpeg_encoder
     src/dc_encoder.cpp
     src/ac_encoder.cpp
     src/huffman_tables.cpp
+    src/huffman_generator.cpp
     src/entropy_encoder.cpp
     src/bitstream_writer.cpp
     src/jpeg_writer.cpp
