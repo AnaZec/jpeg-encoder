@@ -1,0 +1,60 @@
+**************************************************
+Processing image: test4.bmp
+Image number: 4
+Quality: 50
+**************************************************
+Loading BMP...
+Phase duration: 133 ms
+**************************************************
+Converting RGB to YCbCr...
+Phase duration: 617 ms
+**************************************************
+Padding image to dimensions multiple of 8...
+Phase duration: 214 ms
+**************************************************
+Splitting into 8x8 blocks...
+Phase duration: 212 ms
+**************************************************
+Applying DCT...
+Phase duration: 74717 ms
+**************************************************
+Quantizing...
+Phase duration: 339 ms
+**************************************************
+Zigzag reorder...
+Phase duration: 230 ms
+**************************************************
+Entropy encoding...
+Phase duration: 2516 ms
+**************************************************
+Getting quantization tables...
+Phase duration: 0 ms
+**************************************************
+Writing JPEG...
+Phase duration: 1000 ms
+**************************************************
+JPEG written successfully
+Input:   ../images/input/test4.bmp
+Output:  ../images/output/output4_q50.jpg
+Compare: ../images/comparisons/comparison4_q50.jpg
+Report:  ../reports/report4_q50.txt
+Size:    2819423 bytes
+**************************************************
+Generating visual comparison...
+Phase duration: 245 ms
+**************************************************
+
+MSE:
+  B: 8.87435
+  G: 6.02974
+  R: 7.09519
+
+PSNR:
+  B: 38.6494 dB
+  G: 40.3278 dB
+  R: 39.6212 dB
+**************************************************
+Total runtime: 79.983 s
+
+DONE
+

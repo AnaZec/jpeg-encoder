@@ -1,0 +1,60 @@
+**************************************************
+Processing image: test3.bmp
+Image number: 3
+Quality: 90
+**************************************************
+Loading BMP...
+Phase duration: 233 ms
+**************************************************
+Converting RGB to YCbCr...
+Phase duration: 1071 ms
+**************************************************
+Padding image to dimensions multiple of 8...
+Phase duration: 363 ms
+**************************************************
+Splitting into 8x8 blocks...
+Phase duration: 304 ms
+**************************************************
+Applying DCT...
+Phase duration: 129961 ms
+**************************************************
+Quantizing...
+Phase duration: 629 ms
+**************************************************
+Zigzag reorder...
+Phase duration: 447 ms
+**************************************************
+Entropy encoding...
+Phase duration: 3998 ms
+**************************************************
+Getting quantization tables...
+Phase duration: 0 ms
+**************************************************
+Writing JPEG...
+Phase duration: 1569 ms
+**************************************************
+JPEG written successfully
+Input:   ../images/input/test3.bmp
+Output:  ../images/output/output3_q90.jpg
+Compare: ../images/comparisons/comparison3_q90.jpg
+Report:  ../reports/report3_q90.txt
+Size:    5453983 bytes
+**************************************************
+Generating visual comparison...
+Phase duration: 393 ms
+**************************************************
+
+MSE:
+  B: 0.475854
+  G: 0.203942
+  R: 0.354446
+
+PSNR:
+  B: 51.3561 dB
+  G: 55.0357 dB
+  R: 52.6353 dB
+**************************************************
+Total runtime: 138.580 s
+
+DONE
+

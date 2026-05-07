@@ -24,6 +24,7 @@ add_executable(jpeg_encoder
     src/jpeg_writer.cpp
     src/metrics.cpp
     src/debug_dump.cpp
+    src/visual_comparison.cpp
 )
 
 target_include_directories(jpeg_encoder PRIVATE

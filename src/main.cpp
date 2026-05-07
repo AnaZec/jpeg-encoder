@@ -8,6 +8,7 @@
 #include "entropy_encoder.hpp"
 #include "jpeg_writer.hpp"
 #include "metrics.hpp"
+#include "visual_comparison.hpp"
 
 #include <opencv2/opencv.hpp>
 
@@ -72,9 +73,11 @@ int main(int argc, char* argv[]) {
         const fs::path inputDir = "../images/input";
         const fs::path outputDir = "../images/output";
         const fs::path reportDir = "../reports";
+        const fs::path comparisonDir = "../images/comparisons";
 
         fs::create_directories(outputDir);
         fs::create_directories(reportDir);
+        fs::create_directories(comparisonDir);
 
         if (!fs::exists(inputDir) || !fs::is_directory(inputDir)) {
             throw std::runtime_error("Input directory does not exist: " + inputDir.string());
@@ -115,6 +118,8 @@ int main(int argc, char* argv[]) {
             const fs::path reportPath =
                 reportDir / ("report" + imageNumber + "_q" + std::to_string(quality) + ".txt");
 
+            const fs::path comparisonPath =
+                comparisonDir / ("comparison" + imageNumber + "_q" + std::to_string(quality) + ".jpg");
             try {
                 std::ofstream reportFile(reportPath);
                 if (!reportFile) {
@@ -235,6 +240,7 @@ int main(int argc, char* argv[]) {
                 log("JPEG written successfully\n");
                 log("Input:   " + inputPath.string() + "\n");
                 log("Output:  " + outputPath.string() + "\n");
+                log("Compare: " + comparisonPath.string() + "\n");
                 log("Report:  " + reportPath.string() + "\n");
                 logValue("Size:    ", bytesWritten, " bytes");
                 logSeparator();
@@ -251,7 +257,19 @@ int main(int argc, char* argv[]) {
                     throw std::runtime_error("Failed to load compressed JPEG with OpenCV: " + outputPath.string());
                 }
 
-                // 12. Compute MSE
+                // 12. Generate visual comparison
+                start = std::chrono::high_resolution_clock::now();
+                log("Generating visual comparison...\n");
+
+                VisualComparison::createSideBySideComparison(inputPath.string(),
+                                                            outputPath.string(),
+                                                            comparisonPath.string(),
+                                                            quality);
+
+                end = std::chrono::high_resolution_clock::now();
+                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+
+                // 13. Compute MSE
                 MSE mse = Metrics::computeMSE(original, compressed);
 
                 log("\nMSE:\n");
@@ -259,7 +277,7 @@ int main(int argc, char* argv[]) {
                 logValue("  G: ", mse.mseG);
                 logValue("  R: ", mse.mseR);
 
-                // 13. Compute PSNR
+                // 14. Compute PSNR
                 PSNR psnr = Metrics::computePSNR(mse);
 
                 log("\nPSNR:\n");
