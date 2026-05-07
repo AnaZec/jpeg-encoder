@@ -3,48 +3,72 @@
 #include <stdexcept>
 
 void BitstreamWriter::writeBit(bool bit) {
-    currentByte_ <<= 1;
+    ensureValidState();
+
+    currentByte_ = static_cast<uint8_t>(currentByte_ << 1);
+
     if (bit) {
-        currentByte_ |= 0x01;
+        currentByte_ = static_cast<uint8_t>(currentByte_ | 0x01u);
     }
 
     ++bitsFilled_;
 
-    if (bitsFilled_ == 8) {
-        pushByte(currentByte_);
+    if (bitsFilled_ == kBitsPerByte) {
+        appendCompletedByte(currentByte_);
         currentByte_ = 0;
         bitsFilled_ = 0;
     }
 }
 
 void BitstreamWriter::writeBits(uint16_t bits, uint8_t bitCount) {
+    ensureValidState();
+
     if (bitCount > 16) {
-        throw std::runtime_error("BitstreamWriter only supports writing up to 16 bits at once");
+        throw std::runtime_error("BitstreamWriter supports writing at most 16 bits at once");
     }
 
     if (bitCount == 0) {
         return;
     }
 
-    for (int i = bitCount - 1; i >= 0; --i) {
-        writeBit(((bits >> i) & 0x01u) != 0u);
+    /*
+     * JPEG Huffman codes and amplitude bits are written MSB-first.
+     * Only the lowest `bitCount` bits are considered.
+     */
+    for (int bitIndex = static_cast<int>(bitCount) - 1; bitIndex >= 0; --bitIndex) {
+        const bool bit = ((bits >> bitIndex) & 0x01u) != 0u;
+        writeBit(bit);
     }
 }
 
 void BitstreamWriter::writeBits(const std::vector<bool>& bits) {
+    ensureValidState();
+
     for (bool bit : bits) {
         writeBit(bit);
     }
 }
 
 void BitstreamWriter::flushWithOnes() {
+    ensureValidState();
+
     if (bitsFilled_ == 0) {
         return;
     }
 
-    while (bitsFilled_ != 0) {
-        writeBit(true);
-    }
+    const uint8_t remainingBits = static_cast<uint8_t>(kBitsPerByte - bitsFilled_);
+
+    currentByte_ = static_cast<uint8_t>(currentByte_ << remainingBits);
+
+    const uint8_t paddingMask =
+        static_cast<uint8_t>((1u << remainingBits) - 1u);
+
+    currentByte_ = static_cast<uint8_t>(currentByte_ | paddingMask);
+
+    appendCompletedByte(currentByte_);
+
+    currentByte_ = 0;
+    bitsFilled_ = 0;
 }
 
 void BitstreamWriter::reset() {
@@ -65,10 +89,16 @@ bool BitstreamWriter::empty() const {
     return buffer_.empty();
 }
 
-void BitstreamWriter::pushByte(uint8_t byte) {
+void BitstreamWriter::appendCompletedByte(uint8_t byte) {
     buffer_.push_back(byte);
 
     if (byte == 0xFF) {
-        buffer_.push_back(0x00);
+        buffer_.push_back(kByteStuffingValue);
+    }
+}
+
+void BitstreamWriter::ensureValidState() const {
+    if (bitsFilled_ >= kBitsPerByte) {
+        throw std::logic_error("Invalid BitstreamWriter state: bitsFilled_ must be in range [0, 7]");
     }
 }
