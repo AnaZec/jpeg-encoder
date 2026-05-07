@@ -1,11 +1,18 @@
+#ifndef ENABLE_HUFFMAN_DEBUG
+#define ENABLE_HUFFMAN_DEBUG 0
+#endif
+
 #include "jpeg_writer.hpp"
 
 #include "bitstream_writer.hpp"
 #include "huffman_tables.hpp"
+#include "huffman_generator.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <iomanip>
+#include <iostream>
 
 namespace {
 
@@ -31,6 +38,91 @@ uint8_t makeAcSymbol(const EncodedACValue& value) {
 
     return static_cast<uint8_t>(((value.runLength & 0x0F) << 4) |
                                 (value.size & 0x0F));
+}
+
+void debugPrintHuffmanTable(const std::string& name, const JpegHuffmanTable& table) {
+    std::cout << "\n[DEBUG] Huffman table: " << name << "\n";
+
+    std::size_t totalSymbolsFromCounts = 0;
+
+    std::cout << "[DEBUG] Code length counts:";
+    for (std::size_t i = 0; i < table.codeLengthCounts.size(); ++i) {
+        const auto count = table.codeLengthCounts[i];
+        totalSymbolsFromCounts += count;
+
+        if (count > 0) {
+            std::cout << " L" << (i + 1) << "=" << static_cast<int>(count);
+        }
+    }
+    std::cout << "\n";
+
+    std::cout << "[DEBUG] Symbols vector size: " << table.symbols.size() << "\n";
+    std::cout << "[DEBUG] Total symbols from counts: " << totalSymbolsFromCounts << "\n";
+
+    if (totalSymbolsFromCounts != table.symbols.size()) {
+        std::cout << "[DEBUG][ERROR] DHT count/symbol mismatch in " << name << "\n";
+    }
+
+    std::cout << "[DEBUG] First symbols:";
+    const std::size_t previewCount = std::min<std::size_t>(table.symbols.size(), 20);
+    for (std::size_t i = 0; i < previewCount; ++i) {
+        std::cout << " 0x"
+                  << std::hex << std::setw(2) << std::setfill('0')
+                  << static_cast<int>(table.symbols[i])
+                  << std::dec << std::setfill(' ');
+    }
+    std::cout << "\n";
+}
+
+void debugPrintCodeMap(const std::string& name, const HuffmanCodeMap& codes) {
+    std::cout << "\n[DEBUG] Huffman code map: " << name << "\n";
+    std::cout << "[DEBUG] Code count: " << codes.size() << "\n";
+
+    std::size_t previewed = 0;
+    for (const auto& [symbol, code] : codes) {
+        if (previewed >= 20) {
+            break;
+        }
+
+        std::cout << "[DEBUG] symbol=0x"
+                  << std::hex << std::setw(2) << std::setfill('0')
+                  << static_cast<int>(symbol)
+                  << std::dec << std::setfill(' ')
+                  << " length=" << static_cast<int>(code.length)
+                  << " code=0b";
+
+        for (int bit = code.length - 1; bit >= 0; --bit) {
+            std::cout << ((code.code >> bit) & 1);
+        }
+
+        std::cout << "\n";
+        ++previewed;
+    }
+}
+
+void debugValidateTable(const std::string& name, const JpegHuffmanTable& table) {
+    std::size_t totalSymbolsFromCounts = 0;
+
+    for (uint8_t count : table.codeLengthCounts) {
+        totalSymbolsFromCounts += count;
+    }
+
+    if (totalSymbolsFromCounts != table.symbols.size()) {
+        std::cout << "[DEBUG][ERROR] Invalid table " << name
+                  << ": counts say " << totalSymbolsFromCounts
+                  << " symbols, but vector has " << table.symbols.size()
+                  << "\n";
+    }
+
+    if (table.symbols.empty()) {
+        std::cout << "[DEBUG][ERROR] Invalid table " << name
+                  << ": no symbols\n";
+    }
+
+    if (table.symbols.size() > 255) {
+        std::cout << "[DEBUG][ERROR] Invalid table " << name
+                  << ": too many symbols\n";
+    }
 }
 
 } // namespace
@@ -128,27 +220,27 @@ void JpegWriter::writeSingleHuffmanTable(std::vector<uint8_t>& out,
     out.insert(out.end(), table.symbols.begin(), table.symbols.end());
 }
 
-void JpegWriter::writeDHT(std::vector<uint8_t>& out) {
+void JpegWriter::writeDHT(std::vector<uint8_t>& out,
+                          const JpegHuffmanTableSet& huffmanTables) {
     std::vector<uint8_t> payload;
     payload.reserve(512);
 
     // DC table 0: luminance
-    writeSingleHuffmanTable(payload, 0, 0, HuffmanTables::luminanceDCTable());
+    writeSingleHuffmanTable(payload, 0, 0, huffmanTables.luminanceDC);
 
     // AC table 0: luminance
-    writeSingleHuffmanTable(payload, 1, 0, HuffmanTables::luminanceACTable());
+    writeSingleHuffmanTable(payload, 1, 0, huffmanTables.luminanceAC);
 
     // DC table 1: chrominance
-    writeSingleHuffmanTable(payload, 0, 1, HuffmanTables::chrominanceDCTable());
+    writeSingleHuffmanTable(payload, 0, 1, huffmanTables.chrominanceDC);
 
     // AC table 1: chrominance
-    writeSingleHuffmanTable(payload, 1, 1, HuffmanTables::chrominanceACTable());
+    writeSingleHuffmanTable(payload, 1, 1, huffmanTables.chrominanceAC);
 
     writeMarker(out, 0xFFC4);
     writeUint16(out, static_cast<uint16_t>(payload.size() + 2));
     out.insert(out.end(), payload.begin(), payload.end());
 }
-
 void JpegWriter::writeSOS(std::vector<uint8_t>& out) {
     writeMarker(out, 0xFFDA);
     writeUint16(out, 12);
@@ -180,12 +272,19 @@ void JpegWriter::encodeBlockToBitstream(BitstreamWriter& writer,
                                         const EntropyEncodedBlock& block,
                                         const HuffmanCodeMap& dcCodes,
                                         const HuffmanCodeMap& acCodes) {
-    const auto dcIt = dcCodes.find(static_cast<uint8_t>(block.dc.category));
-    if (dcIt == dcCodes.end()) {
-        throw std::runtime_error("Missing Huffman code for DC category");
+    const auto dcSymbol = static_cast<uint8_t>(block.dc.category);
+    const auto dcCodeIt = dcCodes.find(dcSymbol);
+    if (dcCodeIt == dcCodes.end()) {
+        std::cout << "[DEBUG][ERROR] Missing DC Huffman code for symbol 0x"
+                << std::hex << std::setw(2) << std::setfill('0')
+                << static_cast<int>(dcSymbol)
+                << std::dec << std::setfill(' ')
+                << " category=" << block.dc.category << "\n";
+
+        throw std::runtime_error("Missing DC Huffman code");
     }
 
-    writer.writeBits(dcIt->second.code, dcIt->second.length);
+    writer.writeBits(dcCodeIt->second.code, dcCodeIt->second.length);
     writer.writeBits(block.dc.amplitudeBits);
 
     for (const auto& acValue : block.acValues) {
@@ -193,6 +292,12 @@ void JpegWriter::encodeBlockToBitstream(BitstreamWriter& writer,
 
         const auto acIt = acCodes.find(symbol);
         if (acIt == acCodes.end()) {
+            std::cout << "[DEBUG][ERROR] Missing Huffman code for AC symbol 0x"
+                    << std::hex << std::setw(2) << std::setfill('0')
+                    << static_cast<int>(symbol)
+                    << std::dec << std::setfill(' ')
+                    << "\n";
+
             throw std::runtime_error("Missing Huffman code for AC symbol");
         }
 
@@ -204,7 +309,8 @@ void JpegWriter::encodeBlockToBitstream(BitstreamWriter& writer,
     }
 }
 
-std::vector<uint8_t> JpegWriter::encodeScanData(const EntropyImageData& entropyData) {
+std::vector<uint8_t> JpegWriter::encodeScanData(const EntropyImageData& entropyData,
+                                                const JpegHuffmanCodeSet& huffmanCodes) {
     const std::size_t yCount = entropyData.y.blocks.size();
     const std::size_t cbCount = entropyData.cb.blocks.size();
     const std::size_t crCount = entropyData.cr.blocks.size();
@@ -214,17 +320,23 @@ std::vector<uint8_t> JpegWriter::encodeScanData(const EntropyImageData& entropyD
             "Expected equal Y/Cb/Cr block counts for 4:4:4 interleaved baseline JPEG");
     }
 
-    const HuffmanCodeMap lumaDCCodes = HuffmanTables::luminanceDCCodes();
-    const HuffmanCodeMap lumaACCodes = HuffmanTables::luminanceACCodes();
-    const HuffmanCodeMap chromaDCCodes = HuffmanTables::chrominanceDCCodes();
-    const HuffmanCodeMap chromaACCodes = HuffmanTables::chrominanceACCodes();
-
     BitstreamWriter writer;
 
     for (std::size_t i = 0; i < yCount; ++i) {
-        encodeBlockToBitstream(writer, entropyData.y.blocks[i],  lumaDCCodes,   lumaACCodes);
-        encodeBlockToBitstream(writer, entropyData.cb.blocks[i], chromaDCCodes, chromaACCodes);
-        encodeBlockToBitstream(writer, entropyData.cr.blocks[i], chromaDCCodes, chromaACCodes);
+        encodeBlockToBitstream(writer,
+                               entropyData.y.blocks[i],
+                               huffmanCodes.luminanceDC,
+                               huffmanCodes.luminanceAC);
+
+        encodeBlockToBitstream(writer,
+                               entropyData.cb.blocks[i],
+                               huffmanCodes.chrominanceDC,
+                               huffmanCodes.chrominanceAC);
+
+        encodeBlockToBitstream(writer,
+                               entropyData.cr.blocks[i],
+                               huffmanCodes.chrominanceDC,
+                               huffmanCodes.chrominanceAC);
     }
 
     writer.flushWithOnes();
@@ -240,14 +352,42 @@ std::size_t JpegWriter::writeJpegFile(const std::string& outputPath,
     std::vector<uint8_t> bytes;
     bytes.reserve(4096);
 
+    const JpegHuffmanTableSet huffmanTables =
+    HuffmanGenerator::generateFromEntropyData(entropyData);
+
+    const JpegHuffmanCodeSet huffmanCodes =
+        HuffmanTables::buildCodeSet(huffmanTables);
+
+    #if ENABLE_HUFFMAN_DEBUG
+    std::cout << "\n========== HUFFMAN DEBUG ==========\n";
+
+    debugValidateTable("Luminance DC", huffmanTables.luminanceDC);
+    debugValidateTable("Luminance AC", huffmanTables.luminanceAC);
+    debugValidateTable("Chrominance DC", huffmanTables.chrominanceDC);
+    debugValidateTable("Chrominance AC", huffmanTables.chrominanceAC);
+
+    debugPrintHuffmanTable("Luminance DC", huffmanTables.luminanceDC);
+    debugPrintHuffmanTable("Luminance AC", huffmanTables.luminanceAC);
+    debugPrintHuffmanTable("Chrominance DC", huffmanTables.chrominanceDC);
+    debugPrintHuffmanTable("Chrominance AC", huffmanTables.chrominanceAC);
+
+    debugPrintCodeMap("Luminance DC", huffmanCodes.luminanceDC);
+    debugPrintCodeMap("Luminance AC", huffmanCodes.luminanceAC);
+    debugPrintCodeMap("Chrominance DC", huffmanCodes.chrominanceDC);
+    debugPrintCodeMap("Chrominance AC", huffmanCodes.chrominanceAC);
+
+    std::cout << "======== END HUFFMAN DEBUG ========\n\n";
+    #endif
+
     writeSOI(bytes);
     writeAPP0(bytes);
     writeDQT(bytes, luminanceTable, chrominanceTable);
     writeSOF0(bytes, width, height);
-    writeDHT(bytes);
+    writeDHT(bytes, huffmanTables);
     writeSOS(bytes);
 
-    const std::vector<uint8_t> scanData = encodeScanData(entropyData);
+    const std::vector<uint8_t> scanData = encodeScanData(entropyData, huffmanCodes);
+    
     bytes.insert(bytes.end(), scanData.begin(), scanData.end());
 
     writeEOI(bytes);

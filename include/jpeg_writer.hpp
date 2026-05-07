@@ -29,8 +29,8 @@ private:
                          const std::array<int, 64>& luminanceTable,
                          const std::array<int, 64>& chrominanceTable);
     static void writeSOF0(std::vector<uint8_t>& out, int width, int height);
-    static void writeDHT(std::vector<uint8_t>& out);
-    static void writeSOS(std::vector<uint8_t>& out);
+    static void writeDHT(std::vector<uint8_t>& out,
+                         const JpegHuffmanTableSet& huffmanTables);    static void writeSOS(std::vector<uint8_t>& out);
     static void writeEOI(std::vector<uint8_t>& out);
 
     static void writeSingleHuffmanTable(std::vector<uint8_t>& out,
@@ -38,8 +38,8 @@ private:
                                         uint8_t tableId,
                                         const JpegHuffmanTable& table);
 
-    static std::vector<uint8_t> encodeScanData(const EntropyImageData& entropyData);
-
+    static std::vector<uint8_t> encodeScanData(const EntropyImageData& entropyData,
+                                           const JpegHuffmanCodeSet& huffmanCodes);
     static void encodeBlockToBitstream(BitstreamWriter& writer,
                                        const EntropyEncodedBlock& block,
                                        const HuffmanCodeMap& dcCodes,

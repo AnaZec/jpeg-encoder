@@ -4,40 +4,40 @@ Image number: 3
 Quality: 75
 **************************************************
 Loading BMP...
-Phase duration: 228 ms
+Phase duration: 242 ms
 **************************************************
 Converting RGB to YCbCr...
-Phase duration: 1075 ms
+Phase duration: 1097 ms
 **************************************************
 Padding image to dimensions multiple of 8...
-Phase duration: 361 ms
+Phase duration: 375 ms
 **************************************************
 Splitting into 8x8 blocks...
-Phase duration: 311 ms
+Phase duration: 322 ms
 **************************************************
 Applying DCT...
-Phase duration: 131468 ms
+Phase duration: 135493 ms
 **************************************************
 Quantizing...
-Phase duration: 645 ms
+Phase duration: 672 ms
 **************************************************
 Zigzag reorder...
-Phase duration: 446 ms
+Phase duration: 463 ms
 **************************************************
 Entropy encoding...
-Phase duration: 3716 ms
+Phase duration: 3933 ms
 **************************************************
 Getting quantization tables...
 Phase duration: 0 ms
 **************************************************
 Writing JPEG...
-Phase duration: 1501 ms
+Phase duration: 1520 ms
 **************************************************
 JPEG written successfully
 Input:   ../images/input/test3.bmp
 Output:  ../images/output/output3_q75.jpg
 Report:  ../reports/report3_q75.txt
-Size:    5861732 bytes
+Size:    4640464 bytes
 **************************************************
 
 MSE:
@@ -50,7 +50,7 @@ PSNR:
   G: 52.0384 dB
   R: 49.3897 dB
 **************************************************
-Total runtime: 139.754 s
+Total runtime: 144.119 s
 
 DONE
 
