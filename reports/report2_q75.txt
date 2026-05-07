@@ -4,40 +4,44 @@ Image number: 2
 Quality: 75
 **************************************************
 Loading BMP...
-Phase duration: 128 ms
+Phase duration: 313 ms
 **************************************************
 Converting RGB to YCbCr...
-Phase duration: 557 ms
+Phase duration: 1212 ms
 **************************************************
 Padding image to dimensions multiple of 8...
-Phase duration: 190 ms
+Phase duration: 456 ms
 **************************************************
 Splitting into 8x8 blocks...
-Phase duration: 161 ms
+Phase duration: 382 ms
 **************************************************
 Applying DCT...
-Phase duration: 69019 ms
+Phase duration: 192486 ms
 **************************************************
 Quantizing...
-Phase duration: 372 ms
+Phase duration: 916 ms
 **************************************************
 Zigzag reorder...
-Phase duration: 235 ms
+Phase duration: 505 ms
 **************************************************
 Entropy encoding...
-Phase duration: 4082 ms
+Phase duration: 4030 ms
 **************************************************
 Getting quantization tables...
 Phase duration: 0 ms
 **************************************************
 Writing JPEG...
-Phase duration: 1327 ms
+Phase duration: 1341 ms
 **************************************************
 JPEG written successfully
 Input:   ../images/input/test2.bmp
 Output:  ../images/output/output2_q75.jpg
+Compare: ../images/comparisons/comparison2_q75.jpg
 Report:  ../reports/report2_q75.txt
 Size:    4396759 bytes
+**************************************************
+Generating visual comparison...
+Phase duration: 254 ms
 **************************************************
 
 MSE:
@@ -50,7 +54,7 @@ PSNR:
   G: 47.7511 dB
   R: 46.9121 dB
 **************************************************
-Total runtime: 76.075 s
+Total runtime: 201.646 s
 
 DONE
 
