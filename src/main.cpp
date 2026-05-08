@@ -205,16 +205,24 @@ int main(int argc, char* argv[]) {
                 releaseMemory(blocks);
                 releaseMemory(padded);
 
-                // 6. Quantize
+                // 6. Prepare quantization tables
+                start = std::chrono::high_resolution_clock::now();
+                log("Preparing quantization tables...\n");
+                const auto lumaTable = Quantizer::scaledLuminanceTable(quality);
+                const auto chromaTable = Quantizer::scaledChrominanceTable(quality);
+                end = std::chrono::high_resolution_clock::now();
+                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+
+                // 7. Quantize
                 start = std::chrono::high_resolution_clock::now();
                 log("Quantizing...\n");
-                QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, quality);
+                QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, lumaTable, chromaTable);
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
                 releaseMemory(dctBlocks);
 
-                // 7. Zigzag reorder
+                // 8. Zigzag reorder
                 start = std::chrono::high_resolution_clock::now();
                 log("Zigzag reorder...\n");
                 ZigZagImageBlocks zigzag = ZigZag::reorderImage(quantized);
@@ -223,7 +231,9 @@ int main(int argc, char* argv[]) {
 
                 releaseMemory(quantized);
 
-                // 8. Entropy encode
+                releaseMemory(quantized);
+
+                // 9. Entropy encode
                 start = std::chrono::high_resolution_clock::now();
                 log("Entropy encoding...\n");
                 EntropyImageData entropy = EntropyEncoder::encodeImage(zigzag);
@@ -231,14 +241,6 @@ int main(int argc, char* argv[]) {
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
                 releaseMemory(zigzag);
-
-                // 9. Get quantization tables
-                start = std::chrono::high_resolution_clock::now();
-                log("Getting quantization tables...\n");
-                const auto lumaTable = Quantizer::scaledLuminanceTable(quality);
-                const auto chromaTable = Quantizer::scaledChrominanceTable(quality);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
                 // 10. Write JPEG
                 start = std::chrono::high_resolution_clock::now();
@@ -253,7 +255,7 @@ int main(int argc, char* argv[]) {
                 );
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-                
+
                 releaseMemory(entropy);
 
                 auto cycleEnd = std::chrono::high_resolution_clock::now();

@@ -24,10 +24,14 @@ public:
                                            const std::array<int, 64>& table);
 
     static QuantizedChannelBlocks quantizeChannel(const DctChannelBlocks& channelBlocks,
-                                                  const std::array<int, 64>& table);
+                                           const std::array<int, 64>& table);
 
     static QuantizedImageBlocks quantizeImage(const DctImageBlocks& imageBlocks,
-                                              int qualityFactor);
+                                          int qualityFactor);
+
+    static QuantizedImageBlocks quantizeImage(const DctImageBlocks& imageBlocks,
+                                          const std::array<int, 64>& luminanceTable,
+                                          const std::array<int, 64>& chrominanceTable);
 
     static std::array<int, 64> scaledLuminanceTable(int qualityFactor);
     static std::array<int, 64> scaledChrominanceTable(int qualityFactor);
