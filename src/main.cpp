@@ -9,6 +9,7 @@
 #include "jpeg_writer.hpp"
 #include "metrics.hpp"
 #include "visual_comparison.hpp"
+#include "logger.hpp"
 
 #include <opencv2/opencv.hpp>
 
@@ -26,8 +27,44 @@
 
 namespace fs = std::filesystem;
 
-static int parseQuality(int argc, char* argv[]) {
-    int quality = 75; // default
+struct AppConfig {
+    int quality = 75;
+    LogLevel logLevel = Logger::defaultLevel();
+};
+
+static std::string toLower(std::string value) {
+    std::transform(value.begin(),
+                   value.end(),
+                   value.begin(),
+                   [](unsigned char c) {
+                       return static_cast<char>(std::tolower(c));
+                   });
+
+    return value;
+}
+
+static LogLevel parseLogLevel(const std::string& value) {
+    const std::string level = toLower(value);
+
+    if (level == "error") {
+        return LogLevel::Error;
+    }
+
+    if (level == "info") {
+        return LogLevel::Info;
+    }
+
+    if (level == "debug") {
+        return LogLevel::Debug;
+    }
+
+    throw std::runtime_error(
+        "Invalid log level: '" + value + "'. Expected: error, info, or debug."
+    );
+}
+
+static AppConfig parseArguments(int argc, char* argv[]) {
+    AppConfig config;
 
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -43,7 +80,7 @@ static int parseQuality(int argc, char* argv[]) {
 
             std::size_t consumed = 0;
             try {
-                quality = std::stoi(value, &consumed);
+                config.quality = std::stoi(value, &consumed);
             } catch (const std::exception&) {
                 throw std::runtime_error(
                     "Invalid value for --quality: '" + value +
@@ -57,29 +94,38 @@ static int parseQuality(int argc, char* argv[]) {
                     "'. Expected integer without extra characters."
                 );
             }
+        } else if (arg == "--log-level") {
+            if (i + 1 >= argc) {
+                throw std::runtime_error(
+                    "Missing value for --log-level. Expected: error, info, or debug."
+                );
+            }
+
+            config.logLevel = parseLogLevel(argv[++i]);
         } else if (arg == "--help" || arg == "-h") {
             std::cout
-                << "Usage: ./jpeg_encoder [--quality <1-100>]\n\n"
+                << "Usage: ./jpeg_encoder [--quality <1-100>] [--log-level <error|info|debug>]\n\n"
                 << "Options:\n"
-                << "  --quality <1-100>   JPEG quality factor. Default: 75\n"
-                << "  --help, -h          Show this help message\n";
+                << "  --quality <1-100>           JPEG quality factor. Default: 75\n"
+                << "  --log-level <error|info|debug>  Logging verbosity\n"
+                << "  --help, -h                  Show this help message\n";
             std::exit(0);
         } else {
             throw std::runtime_error(
                 "Unknown argument: " + arg +
-                "\nUsage: ./jpeg_encoder [--quality <1-100>]"
+                "\nUsage: ./jpeg_encoder [--quality <1-100>] [--log-level <error|info|debug>]"
             );
         }
     }
 
-    if (quality < 1 || quality > 100) {
+    if (config.quality < 1 || config.quality > 100) {
         throw std::runtime_error(
             "Quality must be in range [1, 100]. Received: " +
-            std::to_string(quality)
+            std::to_string(config.quality)
         );
     }
 
-    return quality;
+    return config;
 }
 
 static std::string extractImageNumber(const fs::path& path, int fallbackIndex) {
@@ -99,17 +145,6 @@ static std::string extractImageNumber(const fs::path& path, int fallbackIndex) {
     return std::to_string(fallbackIndex);
 }
 
-static std::string toLower(std::string value) {
-    std::transform(value.begin(),
-                   value.end(),
-                   value.begin(),
-                   [](unsigned char c) {
-                       return static_cast<char>(std::tolower(c));
-                   });
-
-    return value;
-}
-
 template <typename T>
 static void releaseMemory(T& object) {
     T empty{};
@@ -118,7 +153,10 @@ static void releaseMemory(T& object) {
 
 int main(int argc, char* argv[]) {
     try {
-        const int quality = parseQuality(argc, argv);
+        const AppConfig config = parseArguments(argc, argv);
+        const int quality = config.quality;
+
+        Logger logger(config.logLevel, std::cout, std::cerr);
 
         const fs::path inputDir = "../images/input";
         const fs::path outputDir = "../images/output";
@@ -151,9 +189,15 @@ int main(int argc, char* argv[]) {
 
         std::sort(bmpFiles.begin(), bmpFiles.end());
 
-        std::cout << "Found " << bmpFiles.size() << " BMP image(s) in "
-                  << inputDir.string() << '\n';
-        std::cout << "Using quality = " << quality << "\n\n";
+        {
+            std::ostringstream oss;
+            oss << "Found " << bmpFiles.size() << " BMP image(s) in "
+                << inputDir.string() << '\n';
+            logger.info(oss.str());
+        }
+
+        logger.info("Using quality = " + std::to_string(quality) + "\n\n");
+        logger.debug("Log level: debug diagnostics enabled\n");
 
         int processedCount = 0;
         int failedCount = 0;
@@ -170,26 +214,31 @@ int main(int argc, char* argv[]) {
 
             const fs::path comparisonPath =
                 comparisonDir / ("comparison" + imageNumber + "_q" + std::to_string(quality) + ".jpg");
+
+            logger.debug("Output path: " + outputPath.string() + "\n");
+            logger.debug("Report path: " + reportPath.string() + "\n");
+            logger.debug("Comparison path: " + comparisonPath.string() + "\n");
+
             try {
                 std::ofstream reportFile(reportPath);
                 if (!reportFile) {
                     throw std::runtime_error("Failed to open report file: " + reportPath.string());
                 }
 
+                logger.setReportStream(&reportFile);
+
                 auto log = [&](const std::string& message) {
-                    std::cout << message;
-                    reportFile << message;
+                    logger.info(message);
                 };
 
                 auto logValue = [&](const std::string& label, auto value, const std::string& suffix = "") {
                     std::ostringstream oss;
                     oss << label << value << suffix << '\n';
-                    std::cout << oss.str();
-                    reportFile << oss.str();
+                    logger.info(oss.str());
                 };
 
                 auto logSeparator = [&]() {
-                    log("**************************************************\n");
+                    logger.separator();
                 };
 
                 auto logPhaseDuration = [&](const std::chrono::milliseconds& duration) {
@@ -272,8 +321,6 @@ int main(int argc, char* argv[]) {
                 ZigZagImageBlocks zigzag = ZigZag::reorderImage(quantized);
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(quantized);
 
                 releaseMemory(quantized);
 
@@ -367,19 +414,21 @@ int main(int argc, char* argv[]) {
 
                 log("\nDONE\n\n");
                 reportFile.flush();
+                logger.setReportStream(nullptr);
                 ++processedCount;
             } catch (const std::exception& e) {
-                std::cerr << "Error while processing " << inputPath.filename().string()
-                          << ": " << e.what() << '\n';
+                logger.error("Error while processing " + inputPath.filename().string() +
+                            ": " + e.what() + "\n");
+                logger.setReportStream(nullptr);
                 ++failedCount;
             }
         }
 
-        std::cout << "========================================\n";
-        std::cout << "Batch processing finished.\n";
-        std::cout << "Processed successfully: " << processedCount << '\n';
-        std::cout << "Failed: " << failedCount << '\n';
-        std::cout << "========================================\n";
+        logger.info("========================================\n");
+        logger.info("Batch processing finished.\n");
+        logger.info("Processed successfully: " + std::to_string(processedCount) + "\n");
+        logger.info("Failed: " + std::to_string(failedCount) + "\n");
+        logger.info("========================================\n");
 
         if (processedCount == 0) {
             return 1;
