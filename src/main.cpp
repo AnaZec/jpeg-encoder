@@ -1,24 +1,10 @@
-#include "bmp_reader.hpp"
-#include "color_converter.hpp"
-#include "padding.hpp"
-#include "block_splitter.hpp"
-#include "dct.hpp"
-#include "quantizer.hpp"
-#include "zigzag.hpp"
-#include "entropy_encoder.hpp"
-#include "jpeg_writer.hpp"
-#include "metrics.hpp"
-#include "visual_comparison.hpp"
+#include "encoder_pipeline.hpp"
 #include "logger.hpp"
 
-#include <opencv2/opencv.hpp>
-
 #include <algorithm>
-#include <chrono>
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -26,11 +12,6 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-
-struct AppConfig {
-    int quality = 75;
-    LogLevel logLevel = Logger::defaultLevel();
-};
 
 static std::string toLower(std::string value) {
     std::transform(value.begin(),
@@ -62,6 +43,11 @@ static LogLevel parseLogLevel(const std::string& value) {
         "Invalid log level: '" + value + "'. Expected: error, info, or debug."
     );
 }
+
+struct AppConfig {
+    int quality = 75;
+    LogLevel logLevel = Logger::defaultLevel();
+};
 
 static AppConfig parseArguments(int argc, char* argv[]) {
     AppConfig config;
@@ -104,16 +90,18 @@ static AppConfig parseArguments(int argc, char* argv[]) {
             config.logLevel = parseLogLevel(argv[++i]);
         } else if (arg == "--help" || arg == "-h") {
             std::cout
-                << "Usage: ./jpeg_encoder [--quality <1-100>] [--log-level <error|info|debug>]\n\n"
+                << "Usage: ./jpeg_encoder [--quality <1-100>] "
+                << "[--log-level <error|info|debug>]\n\n"
                 << "Options:\n"
-                << "  --quality <1-100>           JPEG quality factor. Default: 75\n"
-                << "  --log-level <error|info|debug>  Logging verbosity\n"
-                << "  --help, -h                  Show this help message\n";
+                << "  --quality <1-100>              JPEG quality factor. Default: 75\n"
+                << "  --log-level <error|info|debug> Logging verbosity\n"
+                << "  --help, -h                     Show this help message\n";
             std::exit(0);
         } else {
             throw std::runtime_error(
                 "Unknown argument: " + arg +
-                "\nUsage: ./jpeg_encoder [--quality <1-100>] [--log-level <error|info|debug>]"
+                "\nUsage: ./jpeg_encoder [--quality <1-100>] "
+                "[--log-level <error|info|debug>]"
             );
         }
     }
@@ -143,12 +131,6 @@ static std::string extractImageNumber(const fs::path& path, int fallbackIndex) {
     }
 
     return std::to_string(fallbackIndex);
-}
-
-template <typename T>
-static void releaseMemory(T& object) {
-    T empty{};
-    object = std::move(empty);
 }
 
 int main(int argc, char* argv[]) {
@@ -197,228 +179,40 @@ int main(int argc, char* argv[]) {
         }
 
         logger.info("Using quality = " + std::to_string(quality) + "\n\n");
+
         logger.debug("Log level: debug diagnostics enabled\n");
+        logger.debug("Sorted BMP input list:\n");
+        for (const auto& bmpFile : bmpFiles) {
+            logger.debug("  " + bmpFile.string() + "\n");
+        }
+
+        EncoderPipelineConfig pipelineConfig{
+            quality,
+            outputDir,
+            reportDir,
+            comparisonDir
+        };
+
+        EncoderPipeline pipeline(pipelineConfig);
 
         int processedCount = 0;
         int failedCount = 0;
 
         for (std::size_t i = 0; i < bmpFiles.size(); ++i) {
             const fs::path& inputPath = bmpFiles[i];
-            const std::string imageNumber = extractImageNumber(inputPath, static_cast<int>(i + 1));
-
-            const fs::path outputPath =
-                outputDir / ("output" + imageNumber + "_q" + std::to_string(quality) + ".jpg");
-
-            const fs::path reportPath =
-                reportDir / ("report" + imageNumber + "_q" + std::to_string(quality) + ".txt");
-
-            const fs::path comparisonPath =
-                comparisonDir / ("comparison" + imageNumber + "_q" + std::to_string(quality) + ".jpg");
-
-            logger.debug("Output path: " + outputPath.string() + "\n");
-            logger.debug("Report path: " + reportPath.string() + "\n");
-            logger.debug("Comparison path: " + comparisonPath.string() + "\n");
+            const std::string imageNumber =
+                extractImageNumber(inputPath, static_cast<int>(i + 1));
 
             try {
-                std::ofstream reportFile(reportPath);
-                if (!reportFile) {
-                    throw std::runtime_error("Failed to open report file: " + reportPath.string());
+                const EncoderPipelineResult result =
+                    pipeline.processImage(inputPath, imageNumber, logger);
+
+                if (result.success) {
+                    ++processedCount;
                 }
-
-                logger.setReportStream(&reportFile);
-
-                auto log = [&](const std::string& message) {
-                    logger.info(message);
-                };
-
-                auto logValue = [&](const std::string& label, auto value, const std::string& suffix = "") {
-                    std::ostringstream oss;
-                    oss << label << value << suffix << '\n';
-                    logger.info(oss.str());
-                };
-
-                auto logSeparator = [&]() {
-                    logger.separator();
-                };
-
-                auto logPhaseDuration = [&](const std::chrono::milliseconds& duration) {
-                    logValue("Phase duration: ", duration.count(), " ms");
-                    logSeparator();
-                };
-
-                logSeparator();
-                log("Processing image: " + inputPath.filename().string() + "\n");
-                log("Image number: " + imageNumber + "\n");
-                logValue("Quality: ", quality);
-                logSeparator();
-
-                auto cycleStart = std::chrono::high_resolution_clock::now();
-
-                // 1. Load BMP
-                auto start = std::chrono::high_resolution_clock::now();
-                log("Loading BMP...\n");
-                BmpImage bmp = BmpReader::load(inputPath.string());
-                auto end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                // 2. Convert RGB -> YCbCr
-                start = std::chrono::high_resolution_clock::now();
-                log("Converting RGB to YCbCr...\n");
-                YCbCrImage ycbcr = ColorConverter::rgbToYCbCr(bmp.data, bmp.width, bmp.height);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                const int originalWidth = bmp.width;
-                const int originalHeight = bmp.height;
-                releaseMemory(bmp);
-
-                // 3. Pad image so dimensions are multiples of 8
-                start = std::chrono::high_resolution_clock::now();
-                log("Padding image to dimensions multiple of 8...\n");
-                YCbCrImage padded = Padding::padToMultipleOf8(ycbcr);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(ycbcr);
-                
-                // 4. Split into 8x8 blocks
-                start = std::chrono::high_resolution_clock::now();
-                log("Splitting into 8x8 blocks...\n");
-                ImageBlocks blocks = BlockSplitter::splitImageIntoBlocks(padded);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                // 5. Apply DCT
-                start = std::chrono::high_resolution_clock::now();
-                log("Applying DCT...\n");
-                DctImageBlocks dctBlocks = DCT::applyToImage(blocks);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(blocks);
-                releaseMemory(padded);
-
-                // 6. Prepare quantization tables
-                start = std::chrono::high_resolution_clock::now();
-                log("Preparing quantization tables...\n");
-                const auto lumaTable = Quantizer::scaledLuminanceTable(quality);
-                const auto chromaTable = Quantizer::scaledChrominanceTable(quality);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                // 7. Quantize
-                start = std::chrono::high_resolution_clock::now();
-                log("Quantizing...\n");
-                QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, lumaTable, chromaTable);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(dctBlocks);
-
-                // 8. Zigzag reorder
-                start = std::chrono::high_resolution_clock::now();
-                log("Zigzag reorder...\n");
-                ZigZagImageBlocks zigzag = ZigZag::reorderImage(quantized);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(quantized);
-
-                // 9. Entropy encode
-                start = std::chrono::high_resolution_clock::now();
-                log("Entropy encoding...\n");
-                EntropyImageData entropy = EntropyEncoder::encodeImage(zigzag);
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(zigzag);
-
-                // 10. Write JPEG
-                start = std::chrono::high_resolution_clock::now();
-                log("Writing JPEG...\n");
-                std::size_t bytesWritten = JpegWriter::writeJpegFile(
-                    outputPath.string(),
-                    originalWidth,
-                    originalHeight,
-                    lumaTable,
-                    chromaTable,
-                    entropy
-                );
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                releaseMemory(entropy);
-
-                auto cycleEnd = std::chrono::high_resolution_clock::now();
-                auto totalRuntimeMs =
-                    std::chrono::duration_cast<std::chrono::milliseconds>(cycleEnd - cycleStart);
-
-                log("JPEG written successfully\n");
-                log("Input:   " + inputPath.string() + "\n");
-                log("Output:  " + outputPath.string() + "\n");
-                log("Compare: " + comparisonPath.string() + "\n");
-                log("Report:  " + reportPath.string() + "\n");
-                logValue("Size:    ", bytesWritten, " bytes");
-                logSeparator();
-
-                // 11. Reload images with OpenCV for metric calculation
-                cv::Mat original = cv::imread(inputPath.string(), cv::IMREAD_COLOR);
-                cv::Mat compressed = cv::imread(outputPath.string(), cv::IMREAD_COLOR);
-
-                if (original.empty()) {
-                    throw std::runtime_error("Failed to load original image with OpenCV: " + inputPath.string());
-                }
-
-                if (compressed.empty()) {
-                    throw std::runtime_error("Failed to load compressed JPEG with OpenCV: " + outputPath.string());
-                }
-
-                // 12. Generate visual comparison
-                start = std::chrono::high_resolution_clock::now();
-                log("Generating visual comparison...\n");
-
-                VisualComparison::createSideBySideComparison(inputPath.string(),
-                                                            outputPath.string(),
-                                                            comparisonPath.string(),
-                                                            quality);
-
-                end = std::chrono::high_resolution_clock::now();
-                logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
-
-                // 13. Compute MSE
-                MSE mse = Metrics::computeMSE(original, compressed);
-
-                log("\nMSE:\n");
-                logValue("  B: ", mse.mseB);
-                logValue("  G: ", mse.mseG);
-                logValue("  R: ", mse.mseR);
-
-                // 14. Compute PSNR
-                PSNR psnr = Metrics::computePSNR(mse);
-
-                log("\nPSNR:\n");
-                logValue("  B: ", psnr.psnrB, " dB");
-                logValue("  G: ", psnr.psnrG, " dB");
-                logValue("  R: ", psnr.psnrR, " dB");
-
-                const double totalRuntimeSec =
-                    static_cast<double>(totalRuntimeMs.count()) / 1000.0;
-
-                logSeparator();
-                {
-                    std::ostringstream oss;
-                    oss << std::fixed << std::setprecision(3)
-                        << "Total runtime: " << totalRuntimeSec << " s\n";
-                    log(oss.str());
-                }
-
-                log("\nDONE\n\n");
-                reportFile.flush();
-                logger.setReportStream(nullptr);
-                ++processedCount;
             } catch (const std::exception& e) {
                 logger.error("Error while processing " + inputPath.filename().string() +
-                            ": " + e.what() + "\n");
+                             ": " + e.what() + "\n");
                 logger.setReportStream(nullptr);
                 ++failedCount;
             }
@@ -439,7 +233,7 @@ int main(int argc, char* argv[]) {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
+        std::cerr << "[ERROR] " << e.what() << '\n';
         return 1;
     }
 
