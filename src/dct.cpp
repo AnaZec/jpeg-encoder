@@ -1,39 +1,82 @@
 #include "dct.hpp"
 
+#include <array>
 #include <cmath>
 #include <stdexcept>
 
 namespace {
+
+constexpr int kBlockSize = 8;
+constexpr int kBlockArea = kBlockSize * kBlockSize;
 constexpr double kPi = 3.14159265358979323846;
+
+using CosineTable = std::array<std::array<double, kBlockSize>, kBlockSize>;
+using ScaleTable = std::array<std::array<double, kBlockSize>, kBlockSize>;
 
 double alpha(int value) {
     return (value == 0) ? (1.0 / std::sqrt(2.0)) : 1.0;
 }
+
+const CosineTable& cosineTable() {
+    static const CosineTable table = [] {
+        CosineTable values{};
+
+        for (int frequency = 0; frequency < kBlockSize; ++frequency) {
+            for (int position = 0; position < kBlockSize; ++position) {
+                values[frequency][position] =
+                    std::cos(((2.0 * position + 1.0) *
+                              frequency *
+                              kPi) / 16.0);
+            }
+        }
+
+        return values;
+    }();
+
+    return table;
 }
+
+const ScaleTable& dctScaleTable() {
+    static const ScaleTable table = [] {
+        ScaleTable values{};
+
+        for (int v = 0; v < kBlockSize; ++v) {
+            for (int u = 0; u < kBlockSize; ++u) {
+                values[v][u] = 0.25 * alpha(u) * alpha(v);
+            }
+        }
+
+        return values;
+    }();
+
+    return table;
+}
+
+} // namespace
 
 DctBlock8x8 DCT::forwardDCT(const Block8x8& inputBlock) {
     DctBlock8x8 outputBlock{};
 
-    for (int v = 0; v < 8; ++v) {
-        for (int u = 0; u < 8; ++u) {
+    const auto& cosines = cosineTable();
+    const auto& scales = dctScaleTable();
+
+    for (int v = 0; v < kBlockSize; ++v) {
+        for (int u = 0; u < kBlockSize; ++u) {
             double sum = 0.0;
 
-            for (int y = 0; y < 8; ++y) {
-                for (int x = 0; x < 8; ++x) {
+            for (int y = 0; y < kBlockSize; ++y) {
+                const int rowOffset = y * kBlockSize;
+                const double cosY = cosines[v][y];
+
+                for (int x = 0; x < kBlockSize; ++x) {
                     const double shiftedSample =
-                        static_cast<double>(inputBlock[y * 8 + x]) - 128.0;
+                        static_cast<double>(inputBlock[rowOffset + x]) - 128.0;
 
-                    const double cosX =
-                        std::cos(((2.0 * x + 1.0) * u * kPi) / 16.0);
-                    const double cosY =
-                        std::cos(((2.0 * y + 1.0) * v * kPi) / 16.0);
-
-                    sum += shiftedSample * cosX * cosY;
+                    sum += shiftedSample * cosines[u][x] * cosY;
                 }
             }
 
-            outputBlock[v * 8 + u] =
-                0.25 * alpha(u) * alpha(v) * sum;
+            outputBlock[v * kBlockSize + u] = scales[v][u] * sum;
         }
     }
 
