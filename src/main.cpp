@@ -34,16 +34,49 @@ static int parseQuality(int argc, char* argv[]) {
 
         if (arg == "--quality") {
             if (i + 1 >= argc) {
-                throw std::runtime_error("Missing value for --quality");
+                throw std::runtime_error(
+                    "Missing value for --quality. Expected integer in range [1, 100]."
+                );
             }
-            quality = std::stoi(argv[++i]);
+
+            const std::string value = argv[++i];
+
+            std::size_t consumed = 0;
+            try {
+                quality = std::stoi(value, &consumed);
+            } catch (const std::exception&) {
+                throw std::runtime_error(
+                    "Invalid value for --quality: '" + value +
+                    "'. Expected integer in range [1, 100]."
+                );
+            }
+
+            if (consumed != value.size()) {
+                throw std::runtime_error(
+                    "Invalid value for --quality: '" + value +
+                    "'. Expected integer without extra characters."
+                );
+            }
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout
+                << "Usage: ./jpeg_encoder [--quality <1-100>]\n\n"
+                << "Options:\n"
+                << "  --quality <1-100>   JPEG quality factor. Default: 75\n"
+                << "  --help, -h          Show this help message\n";
+            std::exit(0);
         } else {
-            throw std::runtime_error("Unknown argument: " + arg);
+            throw std::runtime_error(
+                "Unknown argument: " + arg +
+                "\nUsage: ./jpeg_encoder [--quality <1-100>]"
+            );
         }
     }
 
     if (quality < 1 || quality > 100) {
-        throw std::runtime_error("Quality must be in range [1, 100]");
+        throw std::runtime_error(
+            "Quality must be in range [1, 100]. Received: " +
+            std::to_string(quality)
+        );
     }
 
     return quality;
@@ -64,6 +97,17 @@ static std::string extractImageNumber(const fs::path& path, int fallbackIndex) {
     }
 
     return std::to_string(fallbackIndex);
+}
+
+static std::string toLower(std::string value) {
+    std::transform(value.begin(),
+                   value.end(),
+                   value.begin(),
+                   [](unsigned char c) {
+                       return static_cast<char>(std::tolower(c));
+                   });
+
+    return value;
 }
 
 template <typename T>
@@ -95,8 +139,8 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 
-            const std::string ext = entry.path().extension().string();
-            if (ext == ".bmp" || ext == ".BMP") {
+            const std::string ext = toLower(entry.path().extension().string());
+            if (ext == ".bmp") {
                 bmpFiles.push_back(entry.path());
             }
         }
@@ -339,6 +383,10 @@ int main(int argc, char* argv[]) {
 
         if (processedCount == 0) {
             return 1;
+        }
+
+        if (failedCount > 0) {
+            return 2;
         }
 
     } catch (const std::exception& e) {
