@@ -15,7 +15,7 @@ ChannelBlocks BlockSplitter::splitChannelIntoBlocks(const std::vector<uint8_t>& 
     }
 
     const std::size_t expectedSize =
-    static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
+        static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
 
     if (channel.size() != expectedSize) {
         throw std::runtime_error("Channel size does not match dimensions");
@@ -31,11 +31,11 @@ ChannelBlocks BlockSplitter::splitChannelIntoBlocks(const std::vector<uint8_t>& 
             Block8x8 block{};
 
             for (int y = 0; y < 8; ++y) {
-                for (int x = 0; x < 8; ++x) {
-                    const int imageX = blockX + x;
-                    const int imageY = blockY + y;
+                const int sourceRowOffset = (blockY + y) * width + blockX;
+                const int blockRowOffset = y * 8;
 
-                    block[y * 8 + x] = channel[imageY * width + imageX];
+                for (int x = 0; x < 8; ++x) {
+                    block[blockRowOffset + x] = channel[sourceRowOffset + x];
                 }
             }
 

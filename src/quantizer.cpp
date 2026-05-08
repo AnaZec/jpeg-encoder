@@ -83,13 +83,20 @@ QuantizedChannelBlocks Quantizer::quantizeChannel(const DctChannelBlocks& channe
 
 QuantizedImageBlocks Quantizer::quantizeImage(const DctImageBlocks& imageBlocks,
                                               int qualityFactor) {
-    const auto lumTable = scaledLuminanceTable(qualityFactor);
-    const auto chromaTable = scaledChrominanceTable(qualityFactor);
+    const auto luminanceTable = scaledLuminanceTable(qualityFactor);
+    const auto chrominanceTable = scaledChrominanceTable(qualityFactor);
 
+    return quantizeImage(imageBlocks, luminanceTable, chrominanceTable);
+}
+
+QuantizedImageBlocks Quantizer::quantizeImage(
+    const DctImageBlocks& imageBlocks,
+    const std::array<int, 64>& luminanceTable,
+    const std::array<int, 64>& chrominanceTable) {
     QuantizedImageBlocks result;
-    result.yBlocks = quantizeChannel(imageBlocks.yBlocks, lumTable);
-    result.cbBlocks = quantizeChannel(imageBlocks.cbBlocks, chromaTable);
-    result.crBlocks = quantizeChannel(imageBlocks.crBlocks, chromaTable);
+    result.yBlocks = quantizeChannel(imageBlocks.yBlocks, luminanceTable);
+    result.cbBlocks = quantizeChannel(imageBlocks.cbBlocks, chrominanceTable);
+    result.crBlocks = quantizeChannel(imageBlocks.crBlocks, chrominanceTable);
 
     return result;
 }
