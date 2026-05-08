@@ -6,18 +6,19 @@
 #include "huffman_tables.hpp"
 
 #include <vector>
+#include <cstdint>
 
 struct EncodedDCValue {
     int difference = 0;
     int category = 0;
-    std::vector<bool> amplitudeBits;
+    uint16_t amplitudeBits = 0;
 };
 
 struct EncodedACValue {
     int runLength = 0;
     int value = 0;
     int size = 0;
-    std::vector<bool> amplitudeBits;
+    uint16_t amplitudeBits = 0;
     bool isEob = false;
     bool isZrl = false;
 };

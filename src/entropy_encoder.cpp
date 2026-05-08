@@ -1,5 +1,35 @@
 #include "entropy_encoder.hpp"
 
+#include <cstdint> 
+
+namespace {
+
+uint16_t magnitudeBits(int value, int bitCount) {
+    if (bitCount == 0) {
+        return 0;
+    }
+
+    const int absValue = (value < 0) ? -value : value;
+    const uint16_t mask = static_cast<uint16_t>((1u << bitCount) - 1u);
+
+    if (value >= 0) {
+        return static_cast<uint16_t>(absValue) & mask;
+    }
+
+    /*
+     * JPEG negative amplitude bits are represented by inverting
+     * the magnitude bits within the selected category width.
+     *
+     * Example:
+     *   value = -3, category = 2
+     *   abs(3) = 0b11
+     *   inverted within 2 bits = 0b00
+     */
+    return static_cast<uint16_t>((~absValue) & mask);
+}
+
+} // namespace
+
 EntropyEncodedBlock EntropyEncoder::encodeBlock(const ZigZagBlock& block, int previousDC) {
     EntropyEncodedBlock result;
 
@@ -8,7 +38,7 @@ EntropyEncodedBlock EntropyEncoder::encodeBlock(const ZigZagBlock& block, int pr
 
     result.dc.difference = diff;
     result.dc.category = DCEncoder::magnitudeCategory(diff);
-    result.dc.amplitudeBits = DCEncoder::amplitudeBits(diff);
+    result.dc.amplitudeBits = magnitudeBits(diff, result.dc.category);
 
     const AcEncodedBlock acBlock = ACEncoder::encodeBlock(block);
 
@@ -23,7 +53,7 @@ EntropyEncodedBlock EntropyEncoder::encodeBlock(const ZigZagBlock& block, int pr
         encoded.isZrl = symbol.isZrl;
 
         if (!symbol.isEob && !symbol.isZrl) {
-            encoded.amplitudeBits = ACEncoder::amplitudeBits(symbol.value);
+            encoded.amplitudeBits = magnitudeBits(symbol.value, encoded.size);
         }
 
         result.acValues.push_back(encoded);

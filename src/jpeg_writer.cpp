@@ -285,7 +285,7 @@ void JpegWriter::encodeBlockToBitstream(BitstreamWriter& writer,
     }
 
     writer.writeBits(dcCodeIt->second.code, dcCodeIt->second.length);
-    writer.writeBits(block.dc.amplitudeBits);
+    writer.writeBits(block.dc.amplitudeBits, static_cast<uint8_t>(block.dc.category));
 
     for (const auto& acValue : block.acValues) {
         const uint8_t symbol = makeAcSymbol(acValue);
@@ -304,7 +304,7 @@ void JpegWriter::encodeBlockToBitstream(BitstreamWriter& writer,
         writer.writeBits(acIt->second.code, acIt->second.length);
 
         if (!acValue.isEob && !acValue.isZrl) {
-            writer.writeBits(acValue.amplitudeBits);
+            writer.writeBits(acValue.amplitudeBits, static_cast<uint8_t>(acValue.size));
         }
     }
 }
