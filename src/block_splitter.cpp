@@ -1,6 +1,7 @@
 #include "block_splitter.hpp"
 
 #include <stdexcept>
+#include <cstddef>
 
 ChannelBlocks BlockSplitter::splitChannelIntoBlocks(const std::vector<uint8_t>& channel,
                                                     int width,
@@ -13,7 +14,10 @@ ChannelBlocks BlockSplitter::splitChannelIntoBlocks(const std::vector<uint8_t>& 
         throw std::runtime_error("Channel dimensions must be multiples of 8");
     }
 
-    if (static_cast<int>(channel.size()) != width * height) {
+    const std::size_t expectedSize =
+    static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
+
+    if (channel.size() != expectedSize) {
         throw std::runtime_error("Channel size does not match dimensions");
     }
 

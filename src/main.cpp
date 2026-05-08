@@ -66,6 +66,12 @@ static std::string extractImageNumber(const fs::path& path, int fallbackIndex) {
     return std::to_string(fallbackIndex);
 }
 
+template <typename T>
+static void releaseMemory(T& object) {
+    T empty{};
+    object = std::move(empty);
+}
+
 int main(int argc, char* argv[]) {
     try {
         const int quality = parseQuality(argc, argv);
@@ -169,6 +175,10 @@ int main(int argc, char* argv[]) {
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
+                const int originalWidth = bmp.width;
+                const int originalHeight = bmp.height;
+                releaseMemory(bmp);
+
                 // 3. Pad image so dimensions are multiples of 8
                 start = std::chrono::high_resolution_clock::now();
                 log("Padding image to dimensions multiple of 8...\n");
@@ -176,6 +186,8 @@ int main(int argc, char* argv[]) {
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
+                releaseMemory(ycbcr);
+                
                 // 4. Split into 8x8 blocks
                 start = std::chrono::high_resolution_clock::now();
                 log("Splitting into 8x8 blocks...\n");
@@ -190,12 +202,17 @@ int main(int argc, char* argv[]) {
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
+                releaseMemory(blocks);
+                releaseMemory(padded);
+
                 // 6. Quantize
                 start = std::chrono::high_resolution_clock::now();
                 log("Quantizing...\n");
                 QuantizedImageBlocks quantized = Quantizer::quantizeImage(dctBlocks, quality);
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+
+                releaseMemory(dctBlocks);
 
                 // 7. Zigzag reorder
                 start = std::chrono::high_resolution_clock::now();
@@ -204,12 +221,16 @@ int main(int argc, char* argv[]) {
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 
+                releaseMemory(quantized);
+
                 // 8. Entropy encode
                 start = std::chrono::high_resolution_clock::now();
                 log("Entropy encoding...\n");
                 EntropyImageData entropy = EntropyEncoder::encodeImage(zigzag);
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+
+                releaseMemory(zigzag);
 
                 // 9. Get quantization tables
                 start = std::chrono::high_resolution_clock::now();
@@ -224,14 +245,16 @@ int main(int argc, char* argv[]) {
                 log("Writing JPEG...\n");
                 std::size_t bytesWritten = JpegWriter::writeJpegFile(
                     outputPath.string(),
-                    bmp.width,
-                    bmp.height,
+                    originalWidth,
+                    originalHeight,
                     lumaTable,
                     chromaTable,
                     entropy
                 );
                 end = std::chrono::high_resolution_clock::now();
                 logPhaseDuration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+                
+                releaseMemory(entropy);
 
                 auto cycleEnd = std::chrono::high_resolution_clock::now();
                 auto totalRuntimeMs =
