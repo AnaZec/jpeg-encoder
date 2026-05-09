@@ -159,3 +159,70 @@ For example, after DCT, a block may contain values like:
   0    0    0   0   0   0   0   0
   0    0    0   0   0   0   0   0
 ```
+
+After quantization, many small values may become zero:
+
+```text
+36  -3   1   0   0   0   0   0
+-2   1   0   0   0   0   0   0
+ 1   0   0   0   0   0   0   0
+ 0   0   0   0   0   0   0   0
+ 0   0   0   0   0   0   0   0
+ 0   0   0   0   0   0   0   0
+ 0   0   0   0   0   0   0   0
+ 0   0   0   0   0   0   0   0
+```
+
+This is very useful for the next stages of JPEG encoding.
+
+After zigzag reordering, the encoder reads the coefficients from low frequency to high frequency. Since many high-frequency values are zero, run-length encoding can represent long sequences of zeros compactly.
+
+## Intuitive Analogy
+
+Imagine describing a song.
+
+One way would be to store the exact air pressure at every tiny moment in time.
+
+Another way would be to describe the song as a combination of tones:
+
+a strong low note
+a weaker middle note
+a few high notes
+some very small details
+
+The DCT does something similar for images.
+
+It describes a block of pixels as a combination of simple visual patterns.
+
+Some patterns are smooth.
+Some patterns change horizontally.
+Some patterns change vertically.
+Some patterns represent fine texture.
+
+JPEG benefits because many image blocks can be described well using only a few strong patterns.
+
+## Summary
+
+The DCT changes how an image block is represented.
+
+It converts:
+```text
+pixel brightness values
+```
+
+into:
+
+```text
+frequency coefficients
+```
+
+This helps JPEG because:
+
+* the average brightness is stored in the DC coefficient
+* smooth visual information is concentrated near the top-left
+* fine detail is pushed toward the bottom-right
+* many high-frequency coefficients become small
+* quantization can turn many small coefficients into zeros
+* zigzag ordering and entropy coding can then compress those zeros efficiently
+
+The DCT is not the final compression step, but it makes the later compression steps much more effective.
