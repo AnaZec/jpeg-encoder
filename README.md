@@ -147,6 +147,8 @@ The encoder supports quality values in the range:
 
 Default quality: 75
 
+For a more detailed explanation, see [Quantization and JPEG Quality](docs/quantization-and-quality.md).
+
 7. Zigzag Ordering
 
 After quantization, each 8x8 block is reordered using the JPEG zigzag scan pattern.
