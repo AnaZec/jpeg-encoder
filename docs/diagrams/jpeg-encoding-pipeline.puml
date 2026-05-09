@@ -1,0 +1,73 @@
+@startuml jpeg-encoding-pipeline
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  RoundCorner 12
+  BorderColor #444444
+  BackgroundColor #F8F8F8
+}
+skinparam note {
+  BorderColor #777777
+  BackgroundColor #FFF9D6
+}
+
+title JPEG Encoding Pipeline
+
+rectangle "Input BMP Image\n24-bit RGB pixels" as input
+
+rectangle "BMP Reader\nParse headers and pixel data" as bmp
+rectangle "RGB to YCbCr Conversion\nSeparate luminance and chrominance" as ycbcr
+rectangle "Image Padding\nExtend width/height to multiples of 8" as padding
+rectangle "8x8 Block Splitting\nProcess each channel block-by-block" as blocks
+
+rectangle "Forward DCT\nConvert pixels to frequency coefficients" as dct
+rectangle "Quantization\nReduce precision using quality-scaled tables" as quant
+rectangle "Zigzag Reordering\nOrder low frequencies before high frequencies" as zigzag
+
+rectangle "DC Differential Coding\nEncode difference from previous DC coefficient" as dc
+rectangle "AC Run-Length Coding\nCompress zero runs in AC coefficients" as ac
+rectangle "Huffman Entropy Coding\nWrite variable-length codes" as huffman
+
+rectangle "JPEG Bitstream Writer\nSOI, APP0, DQT, SOF0, DHT, SOS, entropy data, EOI" as writer
+rectangle "Output JPEG File" as output
+
+input --> bmp
+bmp --> ycbcr
+ycbcr --> padding
+padding --> blocks
+blocks --> dct
+dct --> quant
+quant --> zigzag
+zigzag --> dc
+zigzag --> ac
+dc --> huffman
+ac --> huffman
+huffman --> writer
+writer --> output
+
+note right of ycbcr
+Y channel stores brightness.
+Cb and Cr store color difference.
+end note
+
+note right of dct
+Each 8x8 block is transformed
+from spatial pixels into
+frequency-domain coefficients.
+end note
+
+note right of quant
+This is the main lossy step.
+Higher quality means weaker
+quantization.
+end note
+
+note right of writer
+The final file is assembled
+according to the baseline JPEG
+marker structure.
+end note
+
+@enduml
