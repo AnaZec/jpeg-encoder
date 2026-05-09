@@ -226,3 +226,11 @@ This helps JPEG because:
 * zigzag ordering and entropy coding can then compress those zeros efficiently
 
 The DCT is not the final compression step, but it makes the later compression steps much more effective.
+
+## Related Reading
+
+The DCT prepares image blocks for compression by separating low-frequency and high-frequency information.
+
+The next step, quantization, decides how much precision to keep from each frequency coefficient.
+
+See [Quantization and JPEG Quality](quantization-and-quality.md).
