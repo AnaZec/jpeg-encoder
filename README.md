@@ -127,6 +127,8 @@ Low-frequency coefficients describe broad image structure. High-frequency coeffi
 
 The DCT implementation uses precomputed cosine and scale-factor tables to avoid redundant calculations inside the hot block-processing loop.
 
+For a more intuitive explanation of how the DCT works in JPEG compression, see [Understanding the DCT](docs/dct-intuition.md).
+
 6. Quantization
 
 Quantization is the main lossy step in JPEG compression.
