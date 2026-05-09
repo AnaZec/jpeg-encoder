@@ -186,6 +186,8 @@ The generated Huffman tables are written into the JPEG DHT marker, and the scan 
 
 This keeps the JPEG header and entropy-coded bitstream consistent.
 
+For a detailed walkthrough, see [Huffman Encoding in the JPEG Encoder](docs/huffman-encoding.md).
+
 10. Bitstream Writing
 
 JPEG entropy data is written bit by bit.
