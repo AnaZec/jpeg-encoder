@@ -57,33 +57,7 @@ jpeg-encoder/
 
 ## Encoding Pipeline 
 
-```text
-BMP input
-  ↓
-BMP loading and validation
-  ↓
-RGB to YCbCr conversion
-  ↓
-Padding to multiples of 8
-  ↓
-8x8 block splitting
-  ↓
-Forward DCT
-  ↓
-Quantization
-  ↓
-Zigzag ordering
-  ↓
-DC/AC entropy preparation
-  ↓
-Huffman coding
-  ↓
-Bitstream writing
-  ↓
-JPEG marker serialization
-  ↓
-JPEG output
-```
+![JPEG encoding pipeline](docs/diagrams/jpeg-encoding-pipeline.svg)
 
 ## Pipeline Stages Explained 
 

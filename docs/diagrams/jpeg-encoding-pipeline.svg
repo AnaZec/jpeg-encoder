@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="1395px" preserveAspectRatio="none" style="width:774px;height:1395px;" version="1.1" viewBox="0 0 774 1395" width="774px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="Arial" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="196" x="292.5" y="19.2419">JPEG Encoding Pipeline</text><!--MD5=[fb14c9b1fd95d0c04eeb1a4af9d96e82]
+entity input--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="138" x="275.5" y="32.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="118" x="285.5" y="57.4818">Input BMP Image</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="114" x="285.5" y="76.5497">24-bit RGB pixels</text><!--MD5=[1dbebeeed94e036e088b3fec71da4f2e]
+entity bmp--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="216" x="236.5" y="150.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="82" x="246.5" y="175.4818">BMP Reader</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="196" x="246.5" y="194.5497">Parse headers and pixel data</text><!--MD5=[99832109852e2f93ee717e3016488605]
+entity ycbcr--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="277" x="206" y="268.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="169" x="216" y="293.4818">RGB to YCbCr Conversion</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="257" x="216" y="312.5497">Separate luminance and chrominance</text><!--MD5=[4898d346e7538d280caf5843cf36895a]
+entity padding--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="270" x="209.5" y="386.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="103" x="219.5" y="411.4818">Image Padding</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="250" x="219.5" y="430.5497">Extend width/height to multiples of 8</text><!--MD5=[86f03df19406dc0c02480e4b06e63bf3]
+entity blocks--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="265" x="212" y="504.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="123" x="222" y="529.4818">8x8 Block Splitting</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="245" x="222" y="548.5497">Process each channel block-by-block</text><!--MD5=[e33ee6906f28684eccf6098890d0e1fe]
+entity dct--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="285" x="202" y="625.0158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="86" x="212" y="649.9818">Forward DCT</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="265" x="212" y="669.0497">Convert pixels to frequency coefficients</text><!--MD5=[781d47030009999ec0220c83a074a692]
+entity quant--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="321" x="184" y="748.0158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="87" x="194" y="772.9818">Quantization</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="301" x="194" y="792.0497">Reduce precision using quality-scaled tables</text><!--MD5=[0cebf1cefc8730feb4b038b359406b2a]
+entity zigzag--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="338" x="175.5" y="868.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="125" x="185.5" y="893.4818">Zigzag Reordering</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="318" x="185.5" y="912.5497">Order low frequencies before high frequencies</text><!--MD5=[226fc8af728df80cb2ddb40b34b22fc1]
+entity dc--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="337" x="6" y="986.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="151" x="16" y="1011.4818">DC Differential Coding</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="317" x="16" y="1030.5497">Encode difference from previous DC coefficient</text><!--MD5=[1c5ba14a582780a0070707c3598231a5]
+entity ac--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="275" x="378" y="986.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="153" x="388" y="1011.4818">AC Run-Length Coding</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="255" x="388" y="1030.5497">Compress zero runs in AC coefficients</text><!--MD5=[0dbb380897bea71e0a1e6e41d38b5f4c]
+entity huffman--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="206" x="241.5" y="1104.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="167" x="251.5" y="1129.4818">Huffman Entropy Coding</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="186" x="251.5" y="1148.5497">Write variable-length codes</text><!--MD5=[8bbd0c0a8f40d4881635ebf60c2a7fc0]
+entity writer--><rect fill="#F8F8F8" height="58.1358" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="361" x="164" y="1225.0158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="145" x="174" y="1249.9818">JPEG Bitstream Writer</text><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="341" x="174" y="1269.0497">SOI, APP0, DQT, SOF0, DHT, SOS, entropy data, EOI</text><!--MD5=[c661d977cad040094ee01910682146de]
+entity output--><rect fill="#F8F8F8" height="39.0679" rx="6" ry="6" style="stroke: #444444; stroke-width: 1.5;" width="129" x="280" y="1345.5158"/><text fill="#000000" font-family="Arial" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="109" x="290" y="1370.4818">Output JPEG File</text><path d="M518,275.0158 L518,293.5158 L483.18,297.5158 L518,301.5158 L518,320.4279 A0,0 0 0 0 518,320.4279 L729,320.4279 A0,0 0 0 0 729,320.4279 L729,285.0158 L719,275.0158 L518,275.0158 A0,0 0 0 0 518,275.0158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><path d="M719,275.0158 L719,285.0158 L729,285.0158 L719,275.0158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="167" x="524" y="293.9129">Y channel stores brightness.</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="190" x="524" y="311.6189">Cb and Cr store color difference.</text><path d="M522.5,622.5158 L522.5,650.0158 L487.23,654.0158 L522.5,658.0158 L522.5,685.6339 A0,0 0 0 0 522.5,685.6339 L726.5,685.6339 A0,0 0 0 0 726.5,685.6339 L726.5,632.5158 L716.5,622.5158 L522.5,622.5158 A0,0 0 0 0 522.5,622.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><path d="M716.5,622.5158 L716.5,632.5158 L726.5,632.5158 L716.5,622.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="177" x="528.5" y="641.4129">Each 8x8 block is transformed</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="135" x="528.5" y="659.1189">from spatial pixels into</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="183" x="528.5" y="676.8249">frequency-domain coefficients.</text><path d="M540,745.5158 L540,773.0158 L505.02,777.0158 L540,781.0158 L540,808.6339 A0,0 0 0 0 540,808.6339 L735,808.6339 A0,0 0 0 0 735,808.6339 L735,755.5158 L725,745.5158 L540,745.5158 A0,0 0 0 0 540,745.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><path d="M725,745.5158 L725,755.5158 L735,755.5158 L725,745.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="157" x="546" y="764.4129">This is the main lossy step.</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="174" x="546" y="782.1189">Higher quality means weaker</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="79" x="546" y="799.8249">quantization.</text><path d="M560.5,1222.5158 L560.5,1250.0158 L525.29,1254.0158 L560.5,1258.0158 L560.5,1285.6339 A0,0 0 0 0 560.5,1285.6339 L762.5,1285.6339 A0,0 0 0 0 762.5,1285.6339 L762.5,1232.5158 L752.5,1222.5158 L560.5,1222.5158 A0,0 0 0 0 560.5,1222.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><path d="M752.5,1222.5158 L752.5,1232.5158 L762.5,1232.5158 L752.5,1222.5158 " fill="#FFF9D6" style="stroke: #777777; stroke-width: 1.0;"/><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="149" x="566.5" y="1241.4129">The final file is assembled</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="181" x="566.5" y="1259.1189">according to the baseline JPEG</text><text fill="#000000" font-family="Arial" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="104" x="566.5" y="1276.8249">marker structure.</text><!--MD5=[d68aafd32b6dafe482a746d98ec17254]
+link input to bmp--><path d="M344.5,90.5958 C344.5,107.0058 344.5,127.8058 344.5,145.0558 " fill="none" id="input-&gt;bmp" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,150.2958,348.5,141.2958,344.5,145.2958,340.5,141.2958,344.5,150.2958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[a60c85380a7659abce7346d58a35670c]
+link bmp to ycbcr--><path d="M344.5,208.5958 C344.5,225.0058 344.5,245.8058 344.5,263.0558 " fill="none" id="bmp-&gt;ycbcr" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,268.2958,348.5,259.2958,344.5,263.2958,340.5,259.2958,344.5,268.2958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[df19d1d735bed602f4200b67f64e7031]
+link ycbcr to padding--><path d="M344.5,326.5958 C344.5,343.0058 344.5,363.8058 344.5,381.0558 " fill="none" id="ycbcr-&gt;padding" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,386.2958,348.5,377.2958,344.5,381.2958,340.5,377.2958,344.5,386.2958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[527e5c29572e53a91535912fbcceab9e]
+link padding to blocks--><path d="M344.5,444.5958 C344.5,461.0058 344.5,481.8058 344.5,499.0558 " fill="none" id="padding-&gt;blocks" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,504.2958,348.5,495.2958,344.5,499.2958,340.5,495.2958,344.5,504.2958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[0a0e365d83af63adfa325f70480452e4]
+link blocks to dct--><path d="M344.5,562.5958 C344.5,579.5958 344.5,601.3758 344.5,619.2958 " fill="none" id="blocks-&gt;dct" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,624.7258,348.5,615.7258,344.5,619.7258,340.5,615.7258,344.5,624.7258" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[e23e2c62964b2c607e895f9177606fa5]
+link dct to quant--><path d="M344.5,683.0758 C344.5,700.8158 344.5,723.8458 344.5,742.5358 " fill="none" id="dct-&gt;quant" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,747.6858,348.5,738.6858,344.5,742.6858,340.5,738.6858,344.5,747.6858" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[8ea8129aaac58a128a11fa9d2c08f48e]
+link quant to zigzag--><path d="M344.5,806.0958 C344.5,823.0958 344.5,844.8758 344.5,862.7958 " fill="none" id="quant-&gt;zigzag" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,868.2258,348.5,859.2258,344.5,863.2258,340.5,859.2258,344.5,868.2258" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[ce7bebd5e2c64dd6cf2f5cfb691909de]
+link zigzag to dc--><path d="M303.35,926.5958 C278.17,943.7758 245.93,965.7758 220,983.4658 " fill="none" id="zigzag-&gt;dc" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="215.57,986.4958,225.2596,984.7318,219.7014,983.6796,220.7536,978.1215,215.57,986.4958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[6dc02bdd6c07ac41b386a031eeef9027]
+link zigzag to ac--><path d="M385.89,926.5958 C411.22,943.7758 443.65,965.7758 469.73,983.4658 " fill="none" id="zigzag-&gt;ac" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="474.19,986.4958,468.993,978.1298,470.054,983.6862,464.4976,984.7473,474.19,986.4958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[3c0d3b1724dfc9d2592445bfab737553]
+link dc to huffman--><path d="M215.65,1044.5958 C240.83,1061.7758 273.07,1083.7758 299,1101.4658 " fill="none" id="dc-&gt;huffman" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="303.43,1104.4958,298.2464,1096.1215,299.2986,1101.6796,293.7404,1102.7318,303.43,1104.4958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[10385f2b1338b5a497acb7929e51d3e4]
+link ac to huffman--><path d="M474.11,1044.5958 C448.78,1061.7758 416.35,1083.7758 390.27,1101.4658 " fill="none" id="ac-&gt;huffman" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="385.81,1104.4958,395.5024,1102.7473,389.946,1101.6862,391.007,1096.1298,385.81,1104.4958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[b223a331766a7e7824a3d866222e26e7]
+link huffman to writer--><path d="M344.5,1162.5958 C344.5,1179.5958 344.5,1201.3758 344.5,1219.2958 " fill="none" id="huffman-&gt;writer" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,1224.7258,348.5,1215.7258,344.5,1219.7258,340.5,1215.7258,344.5,1224.7258" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[d3b90bd04a41e16af8c2314091ba449c]
+link writer to output--><path d="M344.5,1283.0858 C344.5,1300.8058 344.5,1323.4458 344.5,1340.2758 " fill="none" id="writer-&gt;output" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="344.5,1345.2958,348.5,1336.2958,344.5,1340.2958,340.5,1336.2958,344.5,1345.2958" style="stroke: #A80036; stroke-width: 1.0;"/><!--MD5=[89635275f157dfe08b24bc0cd15c6a96]
+@startuml jpeg-encoding-pipeline
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  RoundCorner 12
+  BorderColor #444444
+  BackgroundColor #F8F8F8
+}
+skinparam note {
+  BorderColor #777777
+  BackgroundColor #FFF9D6
+}
+
+title JPEG Encoding Pipeline
+
+rectangle "Input BMP Image\n24-bit RGB pixels" as input
+
+rectangle "BMP Reader\nParse headers and pixel data" as bmp
+rectangle "RGB to YCbCr Conversion\nSeparate luminance and chrominance" as ycbcr
+rectangle "Image Padding\nExtend width/height to multiples of 8" as padding
+rectangle "8x8 Block Splitting\nProcess each channel block-by-block" as blocks
+
+rectangle "Forward DCT\nConvert pixels to frequency coefficients" as dct
+rectangle "Quantization\nReduce precision using quality-scaled tables" as quant
+rectangle "Zigzag Reordering\nOrder low frequencies before high frequencies" as zigzag
+
+rectangle "DC Differential Coding\nEncode difference from previous DC coefficient" as dc
+rectangle "AC Run-Length Coding\nCompress zero runs in AC coefficients" as ac
+rectangle "Huffman Entropy Coding\nWrite variable-length codes" as huffman
+
+rectangle "JPEG Bitstream Writer\nSOI, APP0, DQT, SOF0, DHT, SOS, entropy data, EOI" as writer
+rectangle "Output JPEG File" as output
+
+input - -> bmp
+bmp - -> ycbcr
+ycbcr - -> padding
+padding - -> blocks
+blocks - -> dct
+dct - -> quant
+quant - -> zigzag
+zigzag - -> dc
+zigzag - -> ac
+dc - -> huffman
+ac - -> huffman
+huffman - -> writer
+writer - -> output
+
+note right of ycbcr
+Y channel stores brightness.
+Cb and Cr store color difference.
+end note
+
+note right of dct
+Each 8x8 block is transformed
+from spatial pixels into
+frequency-domain coefficients.
+end note
+
+note right of quant
+This is the main lossy step.
+Higher quality means weaker
+quantization.
+end note
+
+note right of writer
+The final file is assembled
+according to the baseline JPEG
+marker structure.
+end note
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 11:22:07 CET 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.10+7-Ubuntu-124.04
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
