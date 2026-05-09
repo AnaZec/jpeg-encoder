@@ -378,13 +378,13 @@ Lower quality settings apply stronger quantization, which usually reduces file s
 
 | Q95 | Q75 | Q50 | Q5 |
 |---|---|---|---|
-| ![](docs/assets/comparisons/comparison1_q95.jpg) | ![](docs/assets/comparisons/comparison1_q75.jpg) | ![](docs/assets/comparisons/comparison1_q50.jpg) | ![](docs/assets/comparisons/comparison1_q5.jpg) |
+| ![Comparison 1 Q95](images/comparisons/comparison1_q95.jpg) | ![Comparison 1 Q75](images/comparisons/comparison1_q75.jpg) | ![Comparison 1 Q50](images/comparisons/comparison1_q50.jpg) | ![Comparison 1 Q5](images/comparisons/comparison1_q5.jpg) |
 
 ### Test Image 2
 
 | Q90 | Q75 | Q50 | Q5 |
 |---|---|---|---|
-| ![](docs/assets/comparisons/comparison2_q90.jpg) | ![](docs/assets/comparisons/comparison2_q75.jpg) | ![](docs/assets/comparisons/comparison2_q50.jpg) | ![](docs/assets/comparisons/comparison2_q5.jpg) |
+| ![Comparison 2 Q90](images/comparisons/comparison2_q90.jpg) | ![Comparison 2 Q75](images/comparisons/comparison2_q75.jpg) | ![Comparison 2 Q50](images/comparisons/comparison2_q50.jpg) | ![Comparison 2 Q5](images/comparisons/comparison2_q5.jpg) |
 
 ## Limitations
 
