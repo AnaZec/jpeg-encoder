@@ -249,3 +249,11 @@ In short:
 DCT separates image information by frequency.
 Quantization decides how much of that information to keep.
 ```
+
+## Related Reading
+
+Quantization creates many zero-valued coefficients, especially in the high-frequency part of each block.
+
+The next entropy-coding stage uses zigzag ordering, run-length encoding, and Huffman coding to store those zeros efficiently.
+
+See [Huffman Encoding in the JPEG Encoder](huffman-encoding.md).
